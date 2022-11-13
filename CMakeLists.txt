@@ -6,3 +6,5 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(scobca1-fpga-test)
 
 target_sources(app PRIVATE src/main.c)
+target_sources(app PRIVATE src/common.c)
+target_sources(app PRIVATE src/i2c_test.c)
