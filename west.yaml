@@ -1,0 +1,11 @@
+manifest:
+
+  projects:
+    - name: zephyr
+      url: https://github.com/zephyrproject-rtos/zephyr
+      revision: main
+      path: zephyr
+      west-commands: scripts/west-commands.yml
+
+  self:
+    path: scobca1-fpga-test 
