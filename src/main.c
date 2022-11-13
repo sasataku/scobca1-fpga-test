@@ -8,10 +8,12 @@
 #include <zephyr/console/console.h>
 #include <string.h>
 #include "i2c_test.h"
+#include "hrmem_test.h"
 
 void print_menu()
 {
 	printk("[1] Internal I2C Test\n");
+	printk("[2] HRMEM Test\n");
 }
 
 void main(void)
@@ -32,6 +34,8 @@ void main(void)
 			print_menu();
 		} else if (strcmp(s, "1") == 0) {
 			internal_i2c_test();
+		} else if (strcmp(s, "2") == 0) {
+			hrmem_test();
 		}
 	}
 }
