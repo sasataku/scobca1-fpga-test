@@ -7,6 +7,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/console/console.h>
 #include <string.h>
+#include "watchdog.h"
 #include "i2c_test.h"
 #include "hrmem_test.h"
 
@@ -20,6 +21,7 @@ void main(void)
 {
 	char *s;
 
+	start_kick_wdt_thread();
 	console_getline_init();
 
 	printk("This is the FPGA test program for SC-OBC-A1\n");

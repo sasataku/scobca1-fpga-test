@@ -7,5 +7,6 @@ project(scobca1-fpga-test)
 
 target_sources(app PRIVATE src/main.c)
 target_sources(app PRIVATE src/common.c)
+target_sources(app PRIVATE src/watchdog.c)
 target_sources(app PRIVATE src/i2c_test.c)
 target_sources(app PRIVATE src/hrmem_test.c)
