@@ -10,11 +10,13 @@
 #include "watchdog.h"
 #include "i2c_test.h"
 #include "hrmem_test.h"
+#include "qspi_flash_test.h"
 
 void print_menu()
 {
 	printk("[1] Internal I2C Test\n");
 	printk("[2] HRMEM Test\n");
+	printk("[3] QSPI Data Memory Test\n");
 }
 
 void main(void)
@@ -38,6 +40,8 @@ void main(void)
 			internal_i2c_test();
 		} else if (strcmp(s, "2") == 0) {
 			hrmem_test();
+		} else if (strcmp(s, "3") == 0) {
+			qspi_data_memory_test();
 		}
 	}
 }
