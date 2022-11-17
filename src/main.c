@@ -20,6 +20,8 @@
 #include "timer.h"
 #include "interrupt.h"
 
+#include "test.h"
+
 // PIC16LF877A Configuration Bit Settings
 #pragma config FOSC = HS        // Oscillator Selection bits (HS oscillator)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled)
@@ -90,6 +92,8 @@ void main (void)
         SRS3_UART_DE = 1;
         SRS3_UART_RE_B = 0;
         printf("SC OBC TRCH-FW for Quality Inspection\n");
+
+        do_tests();
 
         while (1) {
                 if (FPGA_PWR_CYCLE_REQ) {

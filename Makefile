@@ -19,6 +19,7 @@ PRGDAT := $(HEXDIR)/$(MODULE)
 
 # Source and object files
 SRCS := src/main.c src/fpga.c src/interrupt.c src/timer.c src/usart.c
+SRCS += src/test.c src/test-trch.c
 OBJS := $(SRCS:.c=.p1)
 
 # Clean File
