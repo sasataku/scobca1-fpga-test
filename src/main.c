@@ -99,25 +99,34 @@ void main (void)
                 fpga_state = fpga_state_control(activate_fpga, config_memory, boot_mode);
                 switch(fpga_state) {
                 case FPGA_STATE_POWER_DOWN:
+                        puts("Down");
                         break;
 
                 case FPGA_STATE_POWER_OFF:
+                        puts("Off");
                         activate_fpga = FPGA_ACTIVATE;
                         break;
 
                 case FPGA_STATE_POWER_UP:
+                        puts("Up");
                         break;
 
                 case FPGA_STATE_READY:
+                        puts("Ready");
                         break;
 
                 case FPGA_STATE_CONFIG:
+                        puts("Config");
+                        __delay_ms(50);
                         break;
 
                 case FPGA_STATE_ACTIVE:
+                        puts("Active");
+                        __delay_ms(500);
                         break;
 
                 case FPGA_STATE_ERROR:
+                        puts("Error");
                         activate_fpga = FPGA_SHUTDOWN;
                         /* activate_fpga = FPGA_RECONFIGURE; */
                         config_memory = !config_memory;
