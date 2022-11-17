@@ -9,6 +9,7 @@
 
 #include <zephyr/kernel.h>
 
+uint32_t qspi_norflash_initialize(void);
 uint32_t qspi_data_memory_test(void);
 
 #endif /* SCOBCA1_FPGA_TEST_QSPI_NORFLASH_TESET_H_ */

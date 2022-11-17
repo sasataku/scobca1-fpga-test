@@ -459,6 +459,18 @@ static bool qspi_data_memeory_erase_test(uint8_t mem_no)
 	return true;
 }
 
+uint32_t qspi_norflash_initialize(void)
+{
+	uint32_t err_cnt = 0;
+
+	printk("** Start QSPI Data Memory: Initialize\n");
+	if (!qspi_data_memory_init(QSPI_DATA_MEM_0)) {
+		err_cnt++;
+	}
+
+	return err_cnt;
+}
+
 uint32_t qspi_data_memory_test(void)
 {
 	uint32_t err_cnt = 0;
@@ -473,31 +485,25 @@ uint32_t qspi_data_memory_test(void)
 
 	printk("* Start QSPI Data Memory Test\n");
 
-	printk("** [1] Start QSPI Data Memory: Initialize\n");
-	if (!qspi_data_memory_init(QSPI_DATA_MEM_0)) {
-		err_cnt++;
-		goto end_of_test;
-	}
-
-	printk("** [2] Start QSPI Data Memory: Erase Test \n");
+	printk("** [1] Start QSPI Data Memory: Erase Test \n");
 	if (!qspi_data_memeory_erase_test(QSPI_DATA_MEM_0)) {
 		err_cnt++;
 		goto end_of_test;
 	}
 
-	printk("** [3] Start QSPI Data Memory: Read initial data Test \n");
+	printk("** [2] Start QSPI Data Memory: Read initial data Test \n");
 	if (!qspi_data_memory_read_data_test(QSPI_DATA_MEM_0, QSPI_RX_FIFO_MAX_BYTE, exp_init_data)) {
 		err_cnt++;
 		goto end_of_test;
 	}
 
-	printk("** [4] Start QSPI Data Memory: Write data Test \n");
+	printk("** [3] Start QSPI Data Memory: Write data Test \n");
 	if (!qspi_data_memory_write_data_test(QSPI_DATA_MEM_0, QSPI_RX_FIFO_MAX_BYTE, write_data)) {
 		err_cnt++;
 		goto end_of_test;
 	}
 
-	printk("** [5] Start QSPI Data Memory: Read data Test \n");
+	printk("** [4] Start QSPI Data Memory: Read data Test \n");
 	if (!qspi_data_memory_read_data_test(QSPI_DATA_MEM_0, QSPI_RX_FIFO_MAX_BYTE, write_data)) {
 		err_cnt++;
 		goto end_of_test;

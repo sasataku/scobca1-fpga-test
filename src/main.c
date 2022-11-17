@@ -10,6 +10,7 @@
 #include "watchdog.h"
 #include "i2c_test.h"
 #include "hrmem_test.h"
+#include "qspi_common.h"
 #include "qspi_norflash_test.h"
 #include "qspi_fram_test.h"
 
@@ -39,7 +40,7 @@ void main(void)
 		if (strcmp(s, "h") == 0) {
 			print_menu();
 		} else if (strcmp(s, "1") == 0) {
-			internal_i2c_test();
+			qspi_init();
 		} else if (strcmp(s, "2") == 0) {
 			hrmem_test();
 		} else if (strcmp(s, "3") == 0) {

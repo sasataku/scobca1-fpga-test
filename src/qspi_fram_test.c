@@ -18,7 +18,6 @@
 #define QSPI_SPI_MODE_SINGLE (0x00000001)
 #define QSPI_SPI_MODE_QUAD   (0x00020001)
 
-static uint32_t exp_wip[] = {0x03};
 static uint32_t mem_addr[] = {0x00, 0x00, 0x00};
 
 static bool is_qspi_idle(void)
@@ -274,12 +273,12 @@ static bool qspi_fram_init(uint8_t mem_no)
 	/* Select Memory number 0 or 1 */
 	/* TODO */
 
-	printk("*** [2] Set to `Write Enable'\n");
+	printk("*** [1] Set to `Write Enable'\n");
 	if (!set_write_enable(true)) {
 		return false;
 	}
 
-	printk("*** [3] Set to `QUAD I/O modee'\n");
+	printk("*** [2] Set to `QUAD I/O modee'\n");
 	if (!set_quad_io_mode()) {
 		return false;
 	}
@@ -287,7 +286,7 @@ static bool qspi_fram_init(uint8_t mem_no)
 	/* Wait 1 sec */
 	k_sleep(K_MSEC(1000));
 
-	printk("*** [4] Verify Configuration Register is QUAD I/O mode (0x02)\n");
+	printk("*** [3] Verify Configuration Register is QUAD I/O mode (0x02)\n");
 	if (!verify_quad_io_mode()) {
 		return false;
 	}
@@ -402,20 +401,25 @@ static bool qspi_fram_write_data_test(uint8_t mem_no, uint8_t write_size, uint32
 	return true;
 }
 
+uint32_t qspi_fram_initialize(void)
+{
+	uint32_t err_cnt = 0;
+
+	printk("** Start QSPI FRAM: Initialize\n");
+	if (!qspi_fram_init(QSPI_DATA_MEM_0)) {
+		err_cnt++;
+	}
+
+	return err_cnt;
+}
+
 uint32_t qspi_fram_test(void)
 {
 	uint32_t err_cnt = 0;
-	uint32_t exp_init_data[QSPI_RX_FIFO_MAX_BYTE];
 	uint32_t write_data[QSPI_RX_FIFO_MAX_BYTE] =
 			{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf1, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01};
 
 	printk("* Start QSPI FRAM Test\n");
-
-	printk("** [1] Start QSPI FRAM: Initialize\n");
-	if (!qspi_fram_init(QSPI_DATA_MEM_0)) {
-		err_cnt++;
-		goto end_of_test;
-	}
 
 	printk("** [2] Start QSPI FRAM: Write data Test \n");
 	if (!qspi_fram_write_data_test(QSPI_DATA_MEM_0, QSPI_RX_FIFO_MAX_BYTE, write_data)) {
