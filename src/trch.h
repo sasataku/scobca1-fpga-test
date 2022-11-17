@@ -97,7 +97,7 @@
  *  bit 7: FPGA_RESERVE                       Out          0
  */
 #define TRISD_INIT         0x0F
-#define PORTD_INIT         0x00
+#define PORTD_INIT         0x20
 
 #define I2C_PORT           PORTD
 #define I2C_INT_SCL_DIR    TRISDbits.TRISD0
@@ -111,7 +111,9 @@
 #define I2C_EXT_SDA        PORTDbits.RD3
 #define I2C_EXT_I2C_MASK   (0x0C)
 #define UIO3_00            PORTDbits.RD4
+#define SRS3_UART_DE       PORTDbits.RD4
 #define UIO3_01            PORTDbits.RD5
+#define SRS3_UART_RE_B     PORTDbits.RD5
 #define UIO3_02            PORTDbits.RD6
 
 /*

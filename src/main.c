@@ -86,6 +86,8 @@ void main (void)
         /*
          * Space Cubics OBC TRCH-Firmware Main
          */
+        SRS3_UART_DE = 1;
+        SRS3_UART_RE_B = 0;
         usart_send_msg("SC OBC TRCH-FW for Quality Inspection");
 
         while (1) {
