@@ -7,6 +7,7 @@
 
 #include <xc.h>
 #include <pic.h>
+#include <stdio.h>
 
 #include "trch.h"
 #include "utils.h"
@@ -88,7 +89,7 @@ void main (void)
          */
         SRS3_UART_DE = 1;
         SRS3_UART_RE_B = 0;
-        usart_send_msg("SC OBC TRCH-FW for Quality Inspection");
+        printf("SC OBC TRCH-FW for Quality Inspection\n");
 
         while (1) {
                 if (FPGA_PWR_CYCLE_REQ) {
