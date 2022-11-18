@@ -7,6 +7,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/console/console.h>
 #include <string.h>
+#include <stdlib.h>
 #include "watchdog.h"
 #include "i2c_test.h"
 #include "hrmem_test.h"
@@ -15,18 +16,29 @@
 #include "qspi_fram_test.h"
 #include "can_test.h"
 
-void print_menu()
+enum ScTestNo {
+	SC_TEST_QSPI_INIT = 1,
+	SC_TEST_INTERNAL_I2C,
+	SC_TEST_HRMEM,
+	SC_TEST_QSPI_DATA_MEM,
+	SC_TEST_QSPI_FRAM,
+	SC_TEST_CAN,
+};
+
+void print_menu(void)
 {
-	printk("[1] Internal I2C Test\n");
-	printk("[2] HRMEM Test\n");
-	printk("[3] QSPI Data Memory Test\n");
-	printk("[4] QSPI FRAM Test\n");
-	printk("[5] CAN Test\n");
+	printk("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
+	printk("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
+	printk("[%d] HRMEM Test\n", SC_TEST_HRMEM);
+	printk("[%d] QSPI Data Memory Test\n", SC_TEST_QSPI_DATA_MEM);
+	printk("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
+	printk("[%d] CAN Test\n", SC_TEST_CAN);
 }
 
 void main(void)
 {
 	char *s;
+	uint32_t test_no;
 
 	start_kick_wdt_thread();
 	console_getline_init();
@@ -41,16 +53,31 @@ void main(void)
 		s = console_getline();
 		if (strcmp(s, "h") == 0) {
 			print_menu();
-		} else if (strcmp(s, "1") == 0) {
-			qspi_init();
-		} else if (strcmp(s, "2") == 0) {
-			hrmem_test();
-		} else if (strcmp(s, "3") == 0) {
-			qspi_data_memory_test();
-		} else if (strcmp(s, "4") == 0) {
-			qspi_fram_test();
-		} else if (strcmp(s, "5") == 0) {
-			can_test();
+			continue;
+		}
+
+		test_no = strtol(s, NULL, 10);
+		switch (test_no) {
+		case SC_TEST_QSPI_INIT: 
+			qspi_init(test_no);
+			break;
+		case SC_TEST_INTERNAL_I2C:
+			internal_i2c_test(test_no);
+			break;
+		case SC_TEST_HRMEM:
+			hrmem_test(test_no);
+			break;
+		case SC_TEST_QSPI_DATA_MEM:
+			qspi_data_memory_test(test_no);
+			break;
+		case SC_TEST_QSPI_FRAM:
+			qspi_fram_test(test_no);
+			break;
+		case SC_TEST_CAN:
+			can_test(test_no);
+			break;
+		default:
+			break;
 		}
 	}
 }

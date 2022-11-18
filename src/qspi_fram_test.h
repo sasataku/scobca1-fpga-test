@@ -9,7 +9,7 @@
 
 #include <zephyr/kernel.h>
 
-uint32_t qspi_fram_initialize(void);
-uint32_t qspi_fram_test(void);
+uint32_t qspi_fram_initialize(uint32_t test_no);
+uint32_t qspi_fram_test(uint32_t test_no);
 
 #endif /* SCOBCA1_FPGA_TEST_QSPI_FRAM_TESET_H_ */

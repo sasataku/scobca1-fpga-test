@@ -23,7 +23,7 @@ static uint32_t hrmem_rw_test()
 	return err_cnt;
 }
 
-uint32_t hrmem_test(void)
+uint32_t hrmem_test(uint32_t test_no)
 {
 	uint32_t ret;
 	uint32_t err_cnt = 0;

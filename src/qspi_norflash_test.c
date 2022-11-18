@@ -459,7 +459,7 @@ static bool qspi_data_memeory_erase_test(uint8_t mem_no)
 	return true;
 }
 
-uint32_t qspi_norflash_initialize(void)
+uint32_t qspi_norflash_initialize(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
 
@@ -471,7 +471,7 @@ uint32_t qspi_norflash_initialize(void)
 	return err_cnt;
 }
 
-uint32_t qspi_data_memory_test(void)
+uint32_t qspi_data_memory_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
 	uint32_t exp_init_data[QSPI_RX_FIFO_MAX_BYTE];

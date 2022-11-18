@@ -81,6 +81,6 @@
 #define SCOBCA1_FPGA_CAN_PSLMCR (SCOBCA1_FPGA_CAN_BASE_ADDR + CAN_PSLMCR_OFFSET)
 #define SCOBCA1_FPGA_CAN_VER (SCOBCA1_FPGA_CAN_BASE_ADDR + CAN_VER_OFFSET)
 
-uint32_t can_test(void);
+uint32_t can_test(uint32_t test_no);
 
 #endif /* SCOBCA1_FPGA_TEST_CAN_TESET_H_ */

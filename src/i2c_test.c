@@ -93,7 +93,7 @@ static uint32_t internal_i2c_cvm_test(uint32_t slave_addr)
 	return err_cnt;
 }
 
-uint32_t internal_i2c_test(void)
+uint32_t internal_i2c_test(uint32_t test_no)
 {
 	uint32_t ret;
 	uint32_t err_cnt = 0;

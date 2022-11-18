@@ -182,7 +182,7 @@ end_of_test:
 	return err_cnt;
 }
 
-uint32_t can_test(void)
+uint32_t can_test(uint32_t test_no)
 {
 	uint32_t ret;
 	uint32_t err_cnt = 0;

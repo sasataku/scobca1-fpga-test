@@ -7,12 +7,12 @@
 #include "qspi_norflash_test.h"
 #include "qspi_fram_test.h"
 
-uint32_t qspi_init(void)
+uint32_t qspi_init(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
 
-	err_cnt += qspi_norflash_initialize();
-	err_cnt += qspi_fram_initialize();
+	err_cnt += qspi_norflash_initialize(test_no);
+	err_cnt += qspi_fram_initialize(test_no);
 
 	if (err_cnt == 0) {
 		printk("* Initialize Result: Passed\n");

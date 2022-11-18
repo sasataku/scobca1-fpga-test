@@ -401,7 +401,7 @@ static bool qspi_fram_write_data_test(uint8_t mem_no, uint8_t write_size, uint32
 	return true;
 }
 
-uint32_t qspi_fram_initialize(void)
+uint32_t qspi_fram_initialize(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
 
@@ -413,7 +413,7 @@ uint32_t qspi_fram_initialize(void)
 	return err_cnt;
 }
 
-uint32_t qspi_fram_test(void)
+uint32_t qspi_fram_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
 	uint32_t write_data[QSPI_RX_FIFO_MAX_BYTE] =
