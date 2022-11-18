@@ -13,6 +13,7 @@
 #include "qspi_common.h"
 #include "qspi_norflash_test.h"
 #include "qspi_fram_test.h"
+#include "can_test.h"
 
 void print_menu()
 {
@@ -20,6 +21,7 @@ void print_menu()
 	printk("[2] HRMEM Test\n");
 	printk("[3] QSPI Data Memory Test\n");
 	printk("[4] QSPI FRAM Test\n");
+	printk("[5] CAN Test\n");
 }
 
 void main(void)
@@ -47,7 +49,8 @@ void main(void)
 			qspi_data_memory_test();
 		} else if (strcmp(s, "4") == 0) {
 			qspi_fram_test();
+		} else if (strcmp(s, "5") == 0) {
+			can_test();
 		}
 	}
 }
-
