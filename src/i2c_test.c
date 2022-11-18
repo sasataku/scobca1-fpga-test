@@ -98,33 +98,29 @@ uint32_t internal_i2c_test(uint32_t test_no)
 	uint32_t ret;
 	uint32_t err_cnt = 0;
 
-	printk("* Start Intearnal I2C Test\n");
+	printk("* [%d] Start Intearnal I2C Test\n", test_no);
 
-	printk("** Start Tempature Sensor 1 Test\n");
+	printk("* [%d-1] Start Tempature Sensor 1 Test\n", test_no);
 	ret = internal_i2c_temp_test(0x4C);
 	err_cnt += ret;
 
-	printk("** Start Tempature Sensor 2 Test\n");
+	printk("* [%d-2] Start Tempature Sensor 2 Test\n", test_no);
 	ret = internal_i2c_temp_test(0x4D);
 	err_cnt += ret;
 
-	printk("** Start Tempature Sensor 3 Test\n");
+	printk("* [%d-3] Start Tempature Sensor 3 Test\n", test_no);
 	ret = internal_i2c_temp_test(0x4E);
 	err_cnt += ret;
 
-	printk("** Start Current/Voltage Monitor 1 Test\n");
+	printk("* [%d-4] Start Current/Voltage Monitor 1 Test\n", test_no);
 	ret = internal_i2c_cvm_test(0x40);
 	err_cnt += ret;
 
-	printk("** Start Current/Voltage Monitor 2 Test\n");
+	printk("* [%d-5] Start Current/Voltage Monitor 2 Test\n", test_no);
 	ret = internal_i2c_cvm_test(0x41);
 	err_cnt += ret;
 
-	if (err_cnt == 0) {
-		printk("* Test Result: Passed\n");
-	} else {
-		printk("* Test Result: Failed (Assertion count: %d)\n", err_cnt);
-	}
+	print_result(test_no, err_cnt);
 
 	return err_cnt;
 }

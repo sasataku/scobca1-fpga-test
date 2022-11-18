@@ -28,16 +28,12 @@ uint32_t hrmem_test(uint32_t test_no)
 	uint32_t ret;
 	uint32_t err_cnt = 0;
 
-	printk("* Start HRMEM Test\n");
+	printk("* [%d] Start HRMEM Test\n", test_no);
 
 	ret = hrmem_rw_test();
 	err_cnt += ret;
 
-	if (err_cnt == 0) {
-		printk("* Test Result: Passed\n");
-	} else {
-		printk("* Test Result: Failed (Assertion count: %d)\n", err_cnt);
-	}
+	print_result(test_no, err_cnt);
 
 	return err_cnt;
 }
