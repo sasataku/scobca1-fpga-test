@@ -121,7 +121,7 @@ void main (void)
 
                 case FPGA_STATE_CONFIG:
                         puts("Config");
-                        __delay_ms(50);
+                        __delay_ms(100);
                         break;
 
                 case FPGA_STATE_ACTIVE:
