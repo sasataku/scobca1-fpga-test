@@ -15,6 +15,7 @@
 #include "qspi_norflash_test.h"
 #include "qspi_fram_test.h"
 #include "can_test.h"
+#include "system_reg.h"
 
 enum ScTestNo {
 	SC_TEST_QSPI_INIT = 1,
@@ -44,7 +45,14 @@ void main(void)
 	console_getline_init();
 
 	printk("This is the FPGA test program for SC-OBC-A1\n");
+	printk("\n");
+	printk("* System Register IP Version : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_VER));
+	printk("* Build Information          : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_BUILDINFO));
+	printk("* Device DNA 1               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA1));
+	printk("* Device DNA 2               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA2));
+	printk("\n");
 	printk("Please input `h` to show the test program menu\n");
+	printk("\n");
 
 	while (true) {
 
