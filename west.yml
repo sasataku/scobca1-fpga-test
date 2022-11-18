@@ -6,6 +6,9 @@ manifest:
       revision: main
       path: zephyr
       west-commands: scripts/west-commands.yml
+      import:
+        name-allowlist:
+          - cmsis
 
   self:
     path: scobca1-fpga-test 
