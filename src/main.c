@@ -15,6 +15,7 @@
 #include "qspi_norflash_test.h"
 #include "qspi_fram_test.h"
 #include "can_test.h"
+#include "bhm_test.h"
 #include "system_reg.h"
 
 enum ScTestNo {
@@ -24,6 +25,7 @@ enum ScTestNo {
 	SC_TEST_QSPI_DATA_MEM,
 	SC_TEST_QSPI_FRAM,
 	SC_TEST_CAN,
+	SC_TEST_BOARD_HEALTH_MONITOR,
 };
 
 void print_menu(void)
@@ -34,6 +36,7 @@ void print_menu(void)
 	printk("[%d] QSPI Data Memory Test\n", SC_TEST_QSPI_DATA_MEM);
 	printk("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
 	printk("[%d] CAN Test\n", SC_TEST_CAN);
+	printk("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
 }
 
 void main(void)
@@ -83,6 +86,9 @@ void main(void)
 			break;
 		case SC_TEST_CAN:
 			can_test(test_no);
+			break;
+		case SC_TEST_BOARD_HEALTH_MONITOR:
+			bhm_test(test_no);
 			break;
 		default:
 			break;
