@@ -319,7 +319,7 @@ static bool qspi_fram_quad_read_data(uint8_t read_size, uint32_t *exp_vals)
 	write32(SCOBCA1_FPGA_FRAM_QSPI_ACR, 0x00020001);
 
 	printk("* Send Memory Address (3byte)\n");
-	write_data_to_flash(mem_addr, sizeof(mem_addr)/sizeof(uint32_t));
+	write_data_to_flash(mem_addr, ARRAY_SIZE(mem_addr));
 	
 	printk("* Send Mode (0x00)\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
@@ -357,7 +357,7 @@ static bool qspi_fram_write_data(uint8_t write_size, uint32_t *write_data)
 	write32(SCOBCA1_FPGA_FRAM_QSPI_ACR, 0x00020001);
 
 	printk("* Send Memory Address (3byte)\n");
-	write_data_to_flash(mem_addr, sizeof(mem_addr)/sizeof(uint32_t));
+	write_data_to_flash(mem_addr, ARRAY_SIZE(mem_addr));
 
 	printk("* Send Mode (0x00)\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
