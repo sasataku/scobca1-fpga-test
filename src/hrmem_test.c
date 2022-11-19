@@ -7,15 +7,13 @@
 #include "hrmem_test.h"
 #include "common.h"
 
-#define HRMEM_READ_RETRY(count) (count)
-
 static uint32_t hrmem_rw_test()
 {
 	bool ret;
 	uint32_t err_cnt = 0;
 
 	write32(SCOBCA1_FPGA_HRMEM_MIRROR_BASE_ADDR, 0xFFFFFFFF);
-	ret = assert32(SCOBCA1_FPGA_HRMEM_MIRROR_BASE_ADDR, 0xFFFFFFFF, HRMEM_READ_RETRY(10));
+	ret = assert32(SCOBCA1_FPGA_HRMEM_MIRROR_BASE_ADDR, 0xFFFFFFFF, REG_READ_RETRY(10));
 	if (!ret) {
 		err_cnt++;
 	}

@@ -7,7 +7,6 @@
 #include "can_test.h"
 #include "common.h"
 
-#define CAN_READ_RETRY(count) (count)
 #define CAN_PKT_SIZE (8u)
 #define CAN_TXID1_BIT_SHIFT  (21u)
 #define CAN_TXSRTR_BIT_SHIFT (20u)
@@ -57,12 +56,12 @@ static bool can_loopback_test_init(void)
 	write32(SCOBCA1_FPGA_CAN_ENR, 0x01);
 
 	printk("* Verify CAN Status Registe (Error Active: 0x04)\n");
-	if (!assert32(SCOBCA1_FPGA_CAN_STSR, 0x04, CAN_READ_RETRY(10))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_STSR, 0x04, REG_READ_RETRY(10))) {
 		return false;
 	}
 
 	printk("* Verify CAN Interrupt Registe (No interupt: 0x00)\n");
-	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, CAN_READ_RETRY(10))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, REG_READ_RETRY(10))) {
 		return false;
 	}
 
@@ -81,7 +80,7 @@ static bool can_loopback_test_terminate(void)
 	write32(SCOBCA1_FPGA_CAN_STMCR, 0x00);
 
 	printk("* Verify CAN Interrupt Register (No interupt: 0x00)\n");
-	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, CAN_READ_RETRY(10))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, REG_READ_RETRY(10))) {
 		return false;
 	}
 
@@ -105,13 +104,13 @@ static bool can_send_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *can_dat
 	write32(SCOBCA1_FPGA_CAN_TMR4, data_word2);
 
 	printk("* Verify CAN Interrupt Registe (CAN_TRNSDN/CAN_RCVDN/CAN_RXFVAL)\n");
-	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x31, CAN_READ_RETRY(10))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x31, REG_READ_RETRY(10))) {
 		return false;
 	}
 
 	printk("* Clear CAN Interrupt Register and Verify\n");
 	write32(SCOBCA1_FPGA_CAN_ISR, 0x31);
-	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, CAN_READ_RETRY(10))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, REG_READ_RETRY(10))) {
 		return false;
 	}
 
@@ -126,21 +125,21 @@ static bool can_recv_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *exp_can
 	uint32_t data_word2;
 
 	printk("* Read CAN ID and Verify\n");
-	if (!assert32(SCOBCA1_FPGA_CAN_RMR1, get_idr(can_id, can_ext_id), CAN_READ_RETRY(1))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_RMR1, get_idr(can_id, can_ext_id), REG_READ_RETRY(1))) {
 		ret = false;
 	}
 
 	printk("* Read CAN Packet size and Verify\n");
-	if (!assert32(SCOBCA1_FPGA_CAN_RMR2, size, CAN_READ_RETRY(1))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_RMR2, size, REG_READ_RETRY(1))) {
 		ret = false;
 	}
 
 	printk("* ReadCAN Data and Verify\n");
 	convert_can_data_to_word(exp_can_data, size, &data_word1, &data_word2);
-	if (!assert32(SCOBCA1_FPGA_CAN_RMR3, data_word1, CAN_READ_RETRY(1))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_RMR3, data_word1, REG_READ_RETRY(1))) {
 		ret = false;
 	}
-	if (!assert32(SCOBCA1_FPGA_CAN_RMR4, data_word2, CAN_READ_RETRY(1))) {
+	if (!assert32(SCOBCA1_FPGA_CAN_RMR4, data_word2, REG_READ_RETRY(1))) {
 		ret = false;
 	}
 

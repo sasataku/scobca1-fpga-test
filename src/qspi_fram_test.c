@@ -7,8 +7,6 @@
 #include "qspi_common.h"
 #include "common.h"
 
-#define QSPI_READ_RETRY(count) (count)
-#define QSPI_READ_SIZE(size) (size)
 #define QSPI_DATA_MEM_0 (0u)
 #define QSPI_DATA_MEM_1 (1u)
 #define QSPI_ASR_IDLE (0x00)
@@ -24,7 +22,7 @@ static bool is_qspi_idle(void)
 {
 	printk("* Confirm QSPI Access Status is `Idle`\n");
 	if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_ASR, QSPI_ASR_IDLE,
-			QSPI_READ_RETRY(10))) {
+			REG_READ_RETRY(10))) {
 		printk("QSPI (FRAM) is busy, so exit test\n");
 		return false;
 	}
@@ -81,12 +79,12 @@ static bool send_dummy_cycle(uint8_t dummy_count)
 	return true;
 }
 
-static bool read_and_verify_rx_data(size_t size, uint32_t *exp_val)
+static bool read_and_verify_rx_data(size_t exp_size, uint32_t *exp_val)
 {
 	bool ret = true;
 
-	printk("* Reqest RX FIFO %d byte\n", size);
-	for (uint8_t i=0; i<size; i++) {
+	printk("* Reqest RX FIFO %d byte\n", exp_size);
+	for (uint8_t i=0; i<exp_size; i++) {
 		write32(SCOBCA1_FPGA_FRAM_QSPI_RDR, 0x00);
 	}
 
@@ -94,10 +92,10 @@ static bool read_and_verify_rx_data(size_t size, uint32_t *exp_val)
 		return false;
 	}
 
-	printk("* Read RX FIFO %d byte and verify the value\n", size);
-	for (uint8_t i=0; i<size; i++) {
+	printk("* Read RX FIFO %d byte and verify the value\n", exp_size);
+	for (uint8_t i=0; i<exp_size; i++) {
 		if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_RDR, exp_val[i],
-						QSPI_READ_RETRY(1))) {
+						REG_READ_RETRY(1))) {
 			ret = false;
 		}
 	}
@@ -108,20 +106,20 @@ static bool read_and_verify_rx_data(size_t size, uint32_t *exp_val)
 static bool is_qspi_control_done(void)
 {
 	printk("* Confirm QSPI Interrupt Stauts is `SPI Control Done`\n");
-	if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_ISR, 0x01, QSPI_READ_RETRY(10))) {
+	if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_ISR, 0x01, REG_READ_RETRY(10))) {
 		return false;
 	}
 
 	printk("* Clear QSPI Interrupt Stauts\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_ISR, 0x01);
-	if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_ISR, 0x00, QSPI_READ_RETRY(10))) {
+	if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_ISR, 0x00, REG_READ_RETRY(10))) {
 		return false;
 	}
 
 	return true;
 }
 
-static bool verify_status_resisger1(uint32_t *exp_val)
+static bool verify_status_resisger1(size_t exp_size, uint32_t *exp_val)
 {
 	bool ret;
 
@@ -136,8 +134,8 @@ static bool verify_status_resisger1(uint32_t *exp_val)
 		return false;
 	}
 
-	/* Read Memory data (2byte) adn Verify */
-	ret = read_and_verify_rx_data(QSPI_READ_SIZE(1), exp_val);
+	/* Read Memory data (1byte) adn Verify */
+	ret = read_and_verify_rx_data(exp_size, exp_val);
 
 	/* Inactive SPI SS */
 	if (!inactivate_spi_ss()) {
@@ -156,7 +154,6 @@ static bool set_write_enable(bool enable)
 {
 	uint32_t exp_write_disable[] = {0x00};
 	uint32_t exp_write_enable[] = {0x02};
-	uint32_t *exp_val = NULL;
 
 	/* Active SPI SS with SINGLE-IO */
 	if (!activate_spi_ss(QSPI_SPI_MODE_SINGLE)) {
@@ -166,11 +163,9 @@ static bool set_write_enable(bool enable)
 	if (enable) {
 		printk("* Set `Write Enable` (Instructure:0x06) \n");
 		write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x06);
-		exp_val = exp_write_enable;
 	} else {
 		printk("* Set `Write Disable` (Instructure:0x04) \n");
 		write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x04);
-		exp_val = exp_write_disable;
 	}
 
 	/* Inactive SPI SS */
@@ -183,8 +178,14 @@ static bool set_write_enable(bool enable)
 		return false;
 	}
 
-	if (!verify_status_resisger1(exp_val)) {
-		return false;
+	if (enable) {
+		if (!verify_status_resisger1(ARRAY_SIZE(exp_write_enable), exp_write_enable)) {
+			return false;
+		}
+	} else {
+		if (!verify_status_resisger1(ARRAY_SIZE(exp_write_disable), exp_write_disable)) {
+			return false;
+		}
 	}
 
 	return true;
@@ -220,7 +221,7 @@ static bool set_quad_io_mode(void)
 	return true;
 }
 
-static bool verify_config_register(uint32_t exp_val)
+static bool verify_config_register(size_t exp_size, uint32_t *exp_val)
 {
 	bool ret;
 
@@ -236,7 +237,7 @@ static bool verify_config_register(uint32_t exp_val)
 	}
 
 	/* Read Memory data (1byte) adn Verify */
-	ret = read_and_verify_rx_data(QSPI_READ_SIZE(1), &exp_val);
+	ret = read_and_verify_rx_data(exp_size, exp_val);
 
 	/* Inactive SPI SS */
 	if (!inactivate_spi_ss()) {
@@ -253,9 +254,9 @@ static bool verify_config_register(uint32_t exp_val)
 
 static bool verify_quad_io_mode(void)
 {
-	uint32_t exp_quad_mode = 0x42;
+	uint32_t exp_quad_mode[] = {0x42};
 
-	if (!verify_config_register(exp_quad_mode)) {
+	if (!verify_config_register(ARRAY_SIZE(exp_quad_mode), exp_quad_mode)) {
 		return false;
 	}
 
