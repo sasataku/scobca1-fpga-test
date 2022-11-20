@@ -23,6 +23,8 @@ enum ScTestNo {
 	SC_TEST_QSPI_INIT = 1,
 	SC_TEST_INTERNAL_I2C,
 	SC_TEST_HRMEM,
+	SC_TEST_QSPI_CFG_MEM,
+	SC_TEST_QSPI_CFG_MEM_SECTOR,
 	SC_TEST_QSPI_DATA_MEM,
 	SC_TEST_QSPI_DATA_MEM_SECTOR,
 	SC_TEST_QSPI_FRAM,
@@ -35,7 +37,9 @@ void print_menu(void)
 	info("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
 	info("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
 	info("[%d] HRMEM Test\n", SC_TEST_HRMEM);
-	info("[%d] QSPI Data Memory Test\n", SC_TEST_QSPI_DATA_MEM);
+	info("[%d] QSPI Config Memory Test (only 16byte)\n", SC_TEST_QSPI_CFG_MEM);
+	info("[%d] QSPI Config Memory Test (Sector)\n", SC_TEST_QSPI_CFG_MEM_SECTOR);
+	info("[%d] QSPI Data Memory Test (only 16byte)\n", SC_TEST_QSPI_DATA_MEM);
 	info("[%d] QSPI Data Memory Test (Sector)\n", SC_TEST_QSPI_DATA_MEM_SECTOR);
 	info("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
 	info("[%d] CAN Test\n", SC_TEST_CAN);
@@ -80,6 +84,12 @@ void main(void)
 			break;
 		case SC_TEST_HRMEM:
 			hrmem_test(test_no);
+			break;
+		case SC_TEST_QSPI_CFG_MEM:
+			qspi_config_memory_test(test_no);
+			break;
+		case SC_TEST_QSPI_CFG_MEM_SECTOR:
+			qspi_config_memory_sector_test(test_no);
 			break;
 		case SC_TEST_QSPI_DATA_MEM:
 			qspi_data_memory_test(test_no);
