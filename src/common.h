@@ -9,6 +9,7 @@
 
 #include <zephyr/kernel.h>
 
+uint32_t read32(uint32_t addr);
 void write32(uint32_t addr, uint32_t val);
 bool assert32(uint32_t addr, uint32_t exp, uint32_t retry);
 
