@@ -12,6 +12,6 @@
 /* Base address */
 #define SCOBCA1_FPGA_HRMEM_MIRROR_BASE_ADDR  (0x60000000)
 
-uint32_t hrmem_test(void);
+uint32_t hrmem_test(uint32_t test_no);
 
 #endif /* SCOBCA1_FPGA_TEST_HRMEM_TESET_H_ */
