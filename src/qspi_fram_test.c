@@ -7,16 +7,16 @@
 #include "qspi_common.h"
 #include "common.h"
 
-#define QSPI_DATA_MEM_0 (0u)
-#define QSPI_DATA_MEM_1 (1u)
+#define QSPI_FRAM_MEM_ADDR_SIZE (3u)
+#define QSPI_FRAM_MEM0 (0u)
+#define QSPI_FRAM_MEM1 (1u)
+#define QSPI_FRAM_MEM0_SS (0x01)
+#define QSPI_FRAM_MEM1_SS (0x02)
 #define QSPI_ASR_IDLE (0x00)
 #define QSPI_ASR_BUSY (0x01)
 #define QSPI_RX_FIFO_MAX_BYTE (16u)
 #define QSPI_NOR_FLASH_DUMMY_CYCLE_COUNT (2u)
-#define QSPI_SPI_MODE_SINGLE (0x00000001)
-#define QSPI_SPI_MODE_QUAD   (0x00020001)
-
-static uint32_t mem_addr[] = {0x00, 0x00, 0x00};
+#define QSPI_SPI_MODE_QUAD   (0x00020000)
 
 static bool is_qspi_idle(void)
 {
@@ -119,12 +119,12 @@ static bool is_qspi_control_done(void)
 	return true;
 }
 
-static bool verify_status_resisger1(size_t exp_size, uint32_t *exp_val)
+static bool verify_status_resisger1(uint32_t spi_ss, size_t exp_size, uint32_t *exp_val)
 {
 	bool ret;
 
 	/* Activate SPI SS with SINGLE-IO */
-	if (!activate_spi_ss(QSPI_SPI_MODE_SINGLE)) {
+	if (!activate_spi_ss(spi_ss)) {
 		return false;
 	}
 
@@ -150,13 +150,13 @@ static bool verify_status_resisger1(size_t exp_size, uint32_t *exp_val)
 	return ret;
 }
 
-static bool set_write_enable(bool enable)
+static bool set_write_enable(uint32_t spi_ss, bool enable)
 {
 	uint32_t exp_write_disable[] = {0x00};
 	uint32_t exp_write_enable[] = {0x02};
 
 	/* Active SPI SS with SINGLE-IO */
-	if (!activate_spi_ss(QSPI_SPI_MODE_SINGLE)) {
+	if (!activate_spi_ss(spi_ss)) {
 		return false;
 	}
 
@@ -166,6 +166,10 @@ static bool set_write_enable(bool enable)
 	} else {
 		printk("* Set `Write Disable` (Instructure:0x04) \n");
 		write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x04);
+	}
+
+	if (!is_qspi_idle()) {
+		return false;
 	}
 
 	/* Inactive SPI SS */
@@ -179,11 +183,11 @@ static bool set_write_enable(bool enable)
 	}
 
 	if (enable) {
-		if (!verify_status_resisger1(ARRAY_SIZE(exp_write_enable), exp_write_enable)) {
+		if (!verify_status_resisger1(spi_ss, ARRAY_SIZE(exp_write_enable), exp_write_enable)) {
 			return false;
 		}
 	} else {
-		if (!verify_status_resisger1(ARRAY_SIZE(exp_write_disable), exp_write_disable)) {
+		if (!verify_status_resisger1(spi_ss, ARRAY_SIZE(exp_write_disable), exp_write_disable)) {
 			return false;
 		}
 	}
@@ -191,17 +195,22 @@ static bool set_write_enable(bool enable)
 	return true;
 }
 
-static bool set_quad_io_mode(void)
+static bool set_quad_io_mode(uint32_t spi_ss)
 {
 	/* Activate SPI SS with SINGLE-IO */
-	if (!activate_spi_ss(QSPI_SPI_MODE_SINGLE)) {
+	if (!activate_spi_ss(spi_ss)) {
 		return false;
 	}
 
-	printk("**** Set QUAD I/O mode and dummy cycle (4) to configuration register\n");
+	printk("* Set QUAD I/O mode and dummy cycle (4) to configuration register\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x71);
+	/*
+	 * Configuraiton Resister
+	 *   Non volatile: 0x000002
+	 *   Volatile    : 0x070002
+	 */
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
-	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
+	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x70);
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x02);
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x42);
 	if (!is_qspi_idle()) {
@@ -221,16 +230,16 @@ static bool set_quad_io_mode(void)
 	return true;
 }
 
-static bool verify_config_register(size_t exp_size, uint32_t *exp_val)
+static bool verify_config_register(uint32_t spi_ss, size_t exp_size, uint32_t *exp_val)
 {
 	bool ret;
 
 	/* Activate SPI SS with SINGLE-IO */
-	if (!activate_spi_ss(QSPI_SPI_MODE_SINGLE)) {
+	if (!activate_spi_ss(spi_ss)) {
 		return false;
 	}
 
-	printk("**** Request Configuration Register\n");
+	printk("* Request Configuration Register\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x35);
 	if (!is_qspi_idle()) {
 		return false;
@@ -252,11 +261,11 @@ static bool verify_config_register(size_t exp_size, uint32_t *exp_val)
 	return ret;
 }
 
-static bool verify_quad_io_mode(void)
+static bool verify_quad_io_mode(uint32_t spi_ss)
 {
 	uint32_t exp_quad_mode[] = {0x42};
 
-	if (!verify_config_register(ARRAY_SIZE(exp_quad_mode), exp_quad_mode)) {
+	if (!verify_config_register(spi_ss, ARRAY_SIZE(exp_quad_mode), exp_quad_mode)) {
 		return false;
 	}
 
@@ -265,39 +274,44 @@ static bool verify_quad_io_mode(void)
 
 static bool qspi_fram_init(uint8_t mem_no)
 {
+	uint32_t spi_ss;
+
 	if (mem_no > 1) {
 		printk("Invalid Mem number %d (expected 0 or 1)\n", mem_no);
 		return false;
 	}
 
-	/* Select Memory number 0 or 1 */
-	/* TODO */
+	if (mem_no == QSPI_FRAM_MEM0) {
+		spi_ss = QSPI_FRAM_MEM0_SS;
+	} else {
+		spi_ss = QSPI_FRAM_MEM1_SS;
+	}
 
-	printk("*** [1] Set to `Write Enable'\n");
-	if (!set_write_enable(true)) {
+	printk("* [#1] Set to `Write Enable'\n");
+	if (!set_write_enable(spi_ss, true)) {
 		return false;
 	}
 
-	printk("*** [2] Set to `QUAD I/O modee'\n");
-	if (!set_quad_io_mode()) {
+	printk("* [#2] Set to `QUAD I/O modee'\n");
+	if (!set_quad_io_mode(spi_ss)) {
 		return false;
 	}
 
 	/* Wait 1 sec */
 	k_sleep(K_MSEC(1000));
 
-	printk("*** [3] Verify Configuration Register is QUAD I/O mode (0x02)\n");
-	if (!verify_quad_io_mode()) {
+	printk("* [#3] Verify Configuration Register is QUAD I/O mode (0x02)\n");
+	if (!verify_quad_io_mode(spi_ss)) {
 		return false;
 	}
 
 	return true;
 }
 
-static bool qspi_fram_set_quad_read_mode(void)
+static bool qspi_fram_set_quad_read_mode(uint32_t spi_ss)
 {
 	/* Active SPI SS with SINGLE-IO */
-	if (!activate_spi_ss(QSPI_SPI_MODE_SINGLE)) {
+	if (!activate_spi_ss(spi_ss)) {
 		return false;
 	}
 
@@ -312,15 +326,15 @@ static bool qspi_fram_set_quad_read_mode(void)
 	return true;
 }
 
-static bool qspi_fram_quad_read_data(uint8_t read_size, uint32_t *exp_vals)
+static bool qspi_fram_quad_read_data(uint32_t spi_ss, uint8_t read_size, uint32_t *exp_vals, uint32_t *mem_addr)
 {
 	bool ret;
 
 	printk("* Activate SPI SS with Quad-IO SPI Mode\n");
-	write32(SCOBCA1_FPGA_FRAM_QSPI_ACR, 0x00020001);
+	write32(SCOBCA1_FPGA_FRAM_QSPI_ACR, QSPI_SPI_MODE_QUAD + spi_ss);
 
 	printk("* Send Memory Address (3byte)\n");
-	write_data_to_flash(mem_addr, ARRAY_SIZE(mem_addr));
+	write_data_to_flash(mem_addr, QSPI_FRAM_MEM_ADDR_SIZE);
 	
 	printk("* Send Mode (0x00)\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
@@ -342,9 +356,9 @@ static bool qspi_fram_quad_read_data(uint8_t read_size, uint32_t *exp_vals)
 	return ret;
 }
 
-static bool qspi_fram_write_data(uint8_t write_size, uint32_t *write_data)
+static bool qspi_fram_quad_write_data(uint32_t spi_ss, uint8_t write_size, uint32_t *write_data, uint32_t *mem_addr)
 {
-	if (!activate_spi_ss(QSPI_SPI_MODE_SINGLE) ) {
+	if (!activate_spi_ss(spi_ss) ) {
 		return false;
 	}
 
@@ -355,10 +369,10 @@ static bool qspi_fram_write_data(uint8_t write_size, uint32_t *write_data)
 	}
 
 	printk("* Activate SPI SS with Quad-IO SPI Mode\n");
-	write32(SCOBCA1_FPGA_FRAM_QSPI_ACR, 0x00020001);
+	write32(SCOBCA1_FPGA_FRAM_QSPI_ACR, QSPI_SPI_MODE_QUAD + spi_ss);
 
 	printk("* Send Memory Address (3byte)\n");
-	write_data_to_flash(mem_addr, ARRAY_SIZE(mem_addr));
+	write_data_to_flash(mem_addr, QSPI_FRAM_MEM_ADDR_SIZE);
 
 	printk("* Send Mode (0x00)\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
@@ -380,47 +394,61 @@ static bool qspi_fram_write_data(uint8_t write_size, uint32_t *write_data)
 	return true;
 }
 
-static bool qspi_fram_write_data_test(uint8_t mem_no, uint8_t write_size, uint32_t *write_data)
+static bool qspi_fram_write_data(uint8_t mem_no, uint8_t write_size, uint32_t *write_data, uint32_t *mem_addr)
 {
+	uint32_t spi_ss;
+
 	if (mem_no > 1) {
 		printk("Invalid Mem number %d (expected 0 or 1)\n", mem_no);
 		return false;
 	}
 
+	if (mem_no == QSPI_FRAM_MEM0) {
+		spi_ss = QSPI_FRAM_MEM0_SS;
+	} else {
+		spi_ss = QSPI_FRAM_MEM1_SS;
+	}
+
 	printk("* [#1] Set to `Write Enable'\n");
-	if (!set_write_enable(true)) {
+	if (!set_write_enable(spi_ss, true)) {
 		return false;
 	}
 
 	printk("* [#2] Write Data (QUAD Mode)\n");
-	if (!qspi_fram_write_data(write_size, write_data)) {
+	if (!qspi_fram_quad_write_data(spi_ss, write_size, write_data, mem_addr)) {
 		return false;
 	}
 
 	printk("* [#3] Set to `Write Disable'\n");
-	if (!set_write_enable(false)) {
+	if (!set_write_enable(spi_ss, false)) {
 		return false;
 	}
 
 	return true;
 }
 
-static bool qspi_fram_read_data_test(uint8_t mem_no, uint8_t read_size, uint32_t *exp_vals)
+static bool qspi_fram_read_data(uint8_t mem_no, uint8_t read_size, uint32_t *exp_vals, uint32_t *mem_addr)
 {
+	uint32_t spi_ss;
+
 	if (mem_no > 1) {
 		printk("Invalid Mem number %d (expected 0 or 1)\n", mem_no);
 		return false;
 	}
 
-	/* TODO: Select Memory number 0 or 1 */
+	if (mem_no == QSPI_FRAM_MEM0) {
+		spi_ss = QSPI_FRAM_MEM0_SS;
+	} else {
+		spi_ss = QSPI_FRAM_MEM1_SS;
+	}
 
 	printk("* [#1] Set QUAD-IO Read Mode\n");
-	if (!qspi_fram_set_quad_read_mode()) {
+	if (!qspi_fram_set_quad_read_mode(spi_ss)) {
 		return false;
 	}
 
 	printk("* [#2] Read Data (QUAD-IO Mode) \n");
-	if (!qspi_fram_quad_read_data(read_size, exp_vals)) {
+	if (!qspi_fram_quad_read_data(spi_ss, read_size, exp_vals, mem_addr)) {
 		return false;
 	}
 
@@ -431,8 +459,8 @@ uint32_t qspi_fram_initialize(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
 
-	printk("* [%d] Start QSPI FRAM: Initialize\n", test_no);
-	if (!qspi_fram_init(QSPI_DATA_MEM_0)) {
+	printk("* [%d] Start QSPI FRAM [MEM1]: Initialize\n", test_no);
+	if (!qspi_fram_init(QSPI_FRAM_MEM1)) {
 		err_cnt++;
 	}
 
@@ -442,19 +470,22 @@ uint32_t qspi_fram_initialize(uint32_t test_no)
 uint32_t qspi_fram_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
-	uint32_t write_data[QSPI_RX_FIFO_MAX_BYTE] =
-			{0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf1, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0x01};
+	uint32_t write_data[QSPI_RX_FIFO_MAX_BYTE] = {0x00};
+	uint32_t mem_addr[QSPI_FRAM_MEM_ADDR_SIZE] = {0x00, 0x00, 0x00};
+	uint8_t start_val = 0x00;
 
 	printk("* [%d] Start QSPI FRAM Test\n", test_no);
 
-	printk("* [%d-1] Start QSPI FRAM: Write data Test \n", test_no);
-	if (!qspi_fram_write_data_test(QSPI_DATA_MEM_0, QSPI_RX_FIFO_MAX_BYTE, write_data)) {
+	start_val = qspi_create_fifo_data(start_val, write_data, ARRAY_SIZE(write_data), false);
+
+	printk("* [%d-1] Start QSPI FRAM [1]: Write data Test\n", test_no);
+	if (!qspi_fram_write_data(QSPI_FRAM_MEM1, QSPI_RX_FIFO_MAX_BYTE, write_data, mem_addr)) {
 		err_cnt++;
 		goto end_of_test;
 	}
 
-	printk("* [%d-2] Start QSPI FRAM: Read data Test \n", test_no);
-	if (!qspi_fram_read_data_test(QSPI_DATA_MEM_0, QSPI_RX_FIFO_MAX_BYTE, write_data)) {
+	printk("* [%d-2] Start QSPI FRAM [1]: Read data Test\n", test_no);
+	if (!qspi_fram_read_data(QSPI_FRAM_MEM1, QSPI_RX_FIFO_MAX_BYTE, write_data, mem_addr)) {
 		err_cnt++;
 		goto end_of_test;
 	}

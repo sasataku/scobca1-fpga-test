@@ -23,6 +23,7 @@ enum ScTestNo {
 	SC_TEST_INTERNAL_I2C,
 	SC_TEST_HRMEM,
 	SC_TEST_QSPI_DATA_MEM,
+	SC_TEST_QSPI_DATA_MEM_SECTOR,
 	SC_TEST_QSPI_FRAM,
 	SC_TEST_CAN,
 	SC_TEST_BOARD_HEALTH_MONITOR,
@@ -34,6 +35,7 @@ void print_menu(void)
 	printk("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
 	printk("[%d] HRMEM Test\n", SC_TEST_HRMEM);
 	printk("[%d] QSPI Data Memory Test\n", SC_TEST_QSPI_DATA_MEM);
+	printk("[%d] QSPI Data Memory Test (Sector)\n", SC_TEST_QSPI_DATA_MEM_SECTOR);
 	printk("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
 	printk("[%d] CAN Test\n", SC_TEST_CAN);
 	printk("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
@@ -80,6 +82,9 @@ void main(void)
 			break;
 		case SC_TEST_QSPI_DATA_MEM:
 			qspi_data_memory_test(test_no);
+			break;
+		case SC_TEST_QSPI_DATA_MEM_SECTOR:
+			qspi_data_memory_sector_test(test_no);
 			break;
 		case SC_TEST_QSPI_FRAM:
 			qspi_fram_test(test_no);

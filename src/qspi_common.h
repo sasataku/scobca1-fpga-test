@@ -71,5 +71,6 @@
 #define SCOBCA1_FPGA_FRAM_QSPI_VER (SCOBCA1_FPGA_FRAM_QSPI_CONTROL_BASE_ADDR + QSPI_VER_OFFSET)
 
 uint32_t qspi_init(uint32_t test_no);
+uint32_t qspi_create_fifo_data(uint8_t start_val, uint32_t *data, size_t size, bool fill);
 
 #endif /* SCOBCA1_FPGA_TEST_QSPI_COMMON_H_ */
