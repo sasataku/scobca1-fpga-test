@@ -107,10 +107,8 @@ static uint32_t assert_cv(void)
 	return err_cnt;
 }
 
-uint32_t bhm_enable(void)
+bool bhm_enable(void)
 {
-	uint32_t err_cnt = 0;
-
 	debug("* [#1] Clear Board Health Interrupt\n");
 	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, 0xFFFFFFFF);
 
@@ -123,17 +121,17 @@ uint32_t bhm_enable(void)
 	debug("* [#4] Enable all sensor device initialization\n");
 	write32(SCOBCA1_FPGA_SYSMON_BHM_INICTLR, 0x0001001F);
 
+	k_sleep(K_MSEC(1));
+
 	debug("* [#5] Verify initialization and clear\n");
 	if (!assert32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0x01, REG_READ_RETRY(10))) {
 		assert();
-		err_cnt++;
-		goto end_of_test;
+		return false;
 	}
 	write32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0x01);
 	if (!assert32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0x00, REG_READ_RETRY(10))) {
 		assert();
-		err_cnt++;
-		goto end_of_test;
+		return false;
 	}
 
 	debug("* [#6] Set monitoring timing\n");
@@ -154,8 +152,7 @@ uint32_t bhm_enable(void)
 	debug("* [#8] Enable hardware interrupt timer\n");
 	write32(SCOBCA1_FPGA_GPTMR_TECR, 0x02);
 
-end_of_test:
-	return err_cnt;
+	return true;
 }
 
 uint32_t bhm_read_sensor_data(void)
@@ -171,21 +168,22 @@ uint32_t bhm_read_sensor_data(void)
 
 uint32_t bhm_test(uint32_t test_no)
 {
-	uint32_t ret;
 	uint32_t err_cnt = 0;
 
 	info("* [%d] Start Board Health Monitor Test\n", test_no);
 
 	info("* [%d-1] Start Enable Board Health Monitor\n", test_no);
-	ret = bhm_enable();
-	err_cnt += ret;
+	if (!bhm_enable()) {
+		err_cnt++;
+		goto end_of_test;
+	}
 
 	k_sleep(K_MSEC(5));
 
 	info("* [%d-2] Start Read seonsor data test\n", test_no);
-	ret = bhm_read_sensor_data();
-	err_cnt += ret;
+	err_cnt += bhm_read_sensor_data();
 
+end_of_test:
 	print_result(test_no, err_cnt);
 
 	return err_cnt;
