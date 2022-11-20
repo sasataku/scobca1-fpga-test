@@ -8,6 +8,7 @@
 #include <zephyr/console/console.h>
 #include <string.h>
 #include <stdlib.h>
+#include "common.h"
 #include "watchdog.h"
 #include "i2c_test.h"
 #include "hrmem_test.h"
@@ -31,14 +32,14 @@ enum ScTestNo {
 
 void print_menu(void)
 {
-	printk("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
-	printk("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
-	printk("[%d] HRMEM Test\n", SC_TEST_HRMEM);
-	printk("[%d] QSPI Data Memory Test\n", SC_TEST_QSPI_DATA_MEM);
-	printk("[%d] QSPI Data Memory Test (Sector)\n", SC_TEST_QSPI_DATA_MEM_SECTOR);
-	printk("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
-	printk("[%d] CAN Test\n", SC_TEST_CAN);
-	printk("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
+	info("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
+	info("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
+	info("[%d] HRMEM Test\n", SC_TEST_HRMEM);
+	info("[%d] QSPI Data Memory Test\n", SC_TEST_QSPI_DATA_MEM);
+	info("[%d] QSPI Data Memory Test (Sector)\n", SC_TEST_QSPI_DATA_MEM_SECTOR);
+	info("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
+	info("[%d] CAN Test\n", SC_TEST_CAN);
+	info("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
 }
 
 void main(void)
@@ -49,19 +50,19 @@ void main(void)
 	start_kick_wdt_thread();
 	console_getline_init();
 
-	printk("This is the FPGA test program for SC-OBC-A1\n");
-	printk("\n");
-	printk("* System Register IP Version : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_VER));
-	printk("* Build Information          : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_BUILDINFO));
-	printk("* Device DNA 1               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA1));
-	printk("* Device DNA 2               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA2));
-	printk("\n");
-	printk("Please input `h` to show the test program menu\n");
-	printk("\n");
+	info("This is the FPGA test program for SC-OBC-A1\n");
+	info("\n");
+	info("* System Register IP Version : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_VER));
+	info("* Build Information          : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_BUILDINFO));
+	info("* Device DNA 1               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA1));
+	info("* Device DNA 2               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA2));
+	info("\n");
+	info("Please input `h` to show the test program menu\n");
+	info("\n");
 
 	while (true) {
 
-		printk("> ");
+		info("> ");
 
 		s = console_getline();
 		if (strcmp(s, "h") == 0) {
