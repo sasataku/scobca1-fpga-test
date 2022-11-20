@@ -10,6 +10,8 @@
 #define QSPI_NOR_FLASH_MEM_ADDR_SIZE (3u)
 #define QSPI_DATA_MEM0 (0u)
 #define QSPI_DATA_MEM1 (1u)
+#define QSPI_CFG_MEM0  (0u)
+#define QSPI_CFG_MEM1  (1u)
 #define QSPI_DATA_MEM0_SS (0x01)
 #define QSPI_DATA_MEM1_SS (0x02)
 #define QSPI_ASR_IDLE (0x00)
@@ -112,7 +114,7 @@ static bool read_and_verify_rx_data(uint32_t base, size_t exp_size, uint32_t *ex
 	debug("* Read RX FIFO %d byte and verify the value\n", exp_size);
 	for (uint8_t i=0; i<exp_size; i++) {
 		if (!assert32(SCOBCA1_FPGA_NORFLASH_QSPI_RDR(base), exp_val[i],
-						REG_READ_RETRY(1))) {
+						REG_READ_RETRY(0))) {
 			ret = false;
 		}
 	}
@@ -738,8 +740,48 @@ uint32_t qspi_norflash_initialize(uint32_t test_no)
 uint32_t qspi_config_memory_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
+	uint32_t exp_init_data[QSPI_RX_FIFO_MAX_BYTE];
+	uint32_t write_data[QSPI_RX_FIFO_MAX_BYTE];
+	uint32_t base = SCOBCA1_FPGA_CFG_BASE_ADDR;
+	uint32_t mem_addr = 0x00800000;
+	uint8_t start_val = 0x01;
+	bool is_wait_idle = true;
+
+	/* Create test data */
+	for (uint8_t i=0; i<QSPI_RX_FIFO_MAX_BYTE; i++) {
+		exp_init_data[i] = 0xFF;
+	}
+	start_val = qspi_create_fifo_data(start_val, write_data, QSPI_RX_FIFO_MAX_BYTE, false);
 
 	info("* [%d] Start QSPI Config Memory Test (only 16byte)\n", test_no);
+
+	info("* [%d-1] Start QSPI Config Memory: Erase Test (Sector)\n", test_no);
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0,
+							mem_addr, is_wait_idle)) {
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-2] Start QSPI Config Memory: Read initial data Test\n", test_no);
+	if (!qspi_norflash_read(base, QSPI_DATA_MEM0, mem_addr,
+							QSPI_RX_FIFO_MAX_BYTE, exp_init_data)) {
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-3] Start QSPI Config Memory: Write data Test \n", test_no);
+	if (!qspi_norflash_write(base, QSPI_DATA_MEM0, mem_addr,
+							QSPI_RX_FIFO_MAX_BYTE, write_data)) {
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-4] Start QSPI Config Memory: Read data Test \n", test_no);
+	if (!qspi_norflash_read(base, QSPI_DATA_MEM0, mem_addr,
+							QSPI_RX_FIFO_MAX_BYTE, write_data)) {
+		err_cnt++;
+		goto end_of_test;
+	}
 
 end_of_test:
 	print_result(test_no, err_cnt);
@@ -766,7 +808,7 @@ uint32_t qspi_data_memory_test(uint32_t test_no)
 	info("* [%d] Start QSPI NOR Flash Test (only 16byte)\n", test_no);
 
 	info("* [%d-1] Start QSPI Data Memory: Erase Test (Sector)\n", test_no);
-	if (!qspi_norflash_erase(SCOBCA1_FPGA_DATA_BASE_ADDR, QSPI_DATA_MEM0,
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0,
 							mem_addr, is_wait_idle)) {
 		err_cnt++;
 		goto end_of_test;
@@ -802,8 +844,41 @@ end_of_test:
 uint32_t qspi_config_memory_sector_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
+	uint32_t base = SCOBCA1_FPGA_CFG_BASE_ADDR;
+	uint32_t mem_addr = 0x00800000;
+	uint8_t start_val = 0x00;
+	bool is_wait_idle = true;
 
 	info("* [%d] Start QSPI Config Memory Test (Sector)\n", test_no);
+
+	info("* [%d-1] Start QSPI Config Memory: Erase Test (Sector)\n", test_no);
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0, mem_addr, is_wait_idle)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-2] Start QSPI Config Memory: Read initial data Test (Sector:4KB)\n", test_no);
+	is_wait_idle = true;
+	if (!qspi_norflash_read_sector(base, QSPI_DATA_MEM0, mem_addr, start_val, is_wait_idle)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-3] Start QSPI Conifg Memory: Write data Test (Sector:4KB)\n", test_no);
+	if (!qspi_norflash_write_sector(base, QSPI_DATA_MEM0, mem_addr, &start_val)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-4] Start QSPI Config Memory: Read initial data Test (Sector:4KB)\n", test_no);
+	if (!qspi_norflash_read_sector(base, QSPI_DATA_MEM0, mem_addr, start_val, false)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
 
 end_of_test:
 	print_result(test_no, err_cnt);
@@ -815,7 +890,7 @@ uint32_t qspi_data_memory_sector_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
 	uint32_t base = SCOBCA1_FPGA_DATA_BASE_ADDR;
-	uint32_t mem_addr = 0x00500000;
+	uint32_t mem_addr = 0x00800000;
 	uint8_t start_val = 0x00;
 	bool is_wait_idle = true;
 

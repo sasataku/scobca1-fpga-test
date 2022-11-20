@@ -96,7 +96,7 @@ static bool read_and_verify_rx_data(size_t exp_size, uint32_t *exp_val)
 	debug("* Read RX FIFO %d byte and verify the value\n", exp_size);
 	for (uint8_t i=0; i<exp_size; i++) {
 		if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_RDR, exp_val[i],
-						REG_READ_RETRY(1))) {
+						REG_READ_RETRY(0))) {
 			ret = false;
 		}
 	}
