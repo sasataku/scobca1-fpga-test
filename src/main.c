@@ -26,10 +26,11 @@
 #include "can_test.h"
 #include "bhm_test.h"
 #include "system_reg.h"
+#include "longrun_test.h"
 
 enum ScTestNo {
 	SC_TEST_QSPI_INIT = 1,
-	SC_TEST_INTERNAL_I2C,
+	SC_TEST_LONG_RUN,
 	SC_TEST_HRMEM,
 	SC_TEST_QSPI_CFG_MEM,
 	SC_TEST_QSPI_CFG_MEM_SECTOR,
@@ -50,10 +51,12 @@ enum ScTestNo {
 	SC_TEST_BRIDGE,
 };
 
+bool is_exit;
+
 void print_menu(void)
 {
 	info("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
-	info("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
+	info("[%d] Long Run Test\n", SC_TEST_LONG_RUN);
 	info("[%d] HRMEM Test\n", SC_TEST_HRMEM);
 	info("[%d] QSPI Config Memory Test (only 16byte)\n", SC_TEST_QSPI_CFG_MEM);
 	info("[%d] QSPI Config Memory Test (Sector)\n", SC_TEST_QSPI_CFG_MEM_SECTOR);
@@ -102,15 +105,18 @@ void main(void)
 		if (strcmp(s, "h") == 0) {
 			print_menu();
 			continue;
+		} else if (strcmp(s, "q") == 0) {
+			is_exit = true;
+			continue;
 		}
 
 		test_no = strtol(s, NULL, 10);
 		switch (test_no) {
-		case SC_TEST_QSPI_INIT: 
+		case SC_TEST_QSPI_INIT:
 			qspi_init(test_no);
 			break;
-		case SC_TEST_INTERNAL_I2C:
-			internal_i2c_test(test_no);
+		case SC_TEST_LONG_RUN:
+			longrun_test(test_no);
 			break;
 		case SC_TEST_HRMEM:
 			hrmem_test(test_no);

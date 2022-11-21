@@ -121,7 +121,7 @@ bool bhm_enable(void)
 	debug("* [#4] Enable all sensor device initialization\n");
 	write32(SCOBCA1_FPGA_SYSMON_BHM_INICTLR, 0x0001001F);
 
-	k_sleep(K_MSEC(1));
+	k_sleep(K_MSEC(100));
 
 	debug("* [#5] Verify initialization and clear\n");
 	if (!assert32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0x01, REG_READ_RETRY(10))) {
