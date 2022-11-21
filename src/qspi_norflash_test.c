@@ -38,9 +38,11 @@ static uint32_t qspi_select_mem(uint32_t base, uint8_t mem_no)
 		if (mem_no == QSPI_DATA_MEM0) {
 			debug("* [#0] Select Config Memory 0\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00);
+			assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00, REG_READ_RETRY(10));
 		} else {
 			debug("* [#0] Select Config Memory 1\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x10);
+			assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x30, REG_READ_RETRY(10));
 		}
 		spi_ss = 0x01;
 	} else {

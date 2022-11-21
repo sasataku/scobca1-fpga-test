@@ -31,6 +31,8 @@ bool assert32(uint32_t addr, uint32_t exp, uint32_t retry)
 			return true;
 		} else if (i+1 == retry) {
 			err("  read32  [0x%08X] 0x%08x (exp:0x%08x) (retry:%d)\n", addr, regval, exp, i+1);
+		} else {
+			debug("  read32  [0x%08X] 0x%08x (exp:0x%08x) (retry:%d)\n", addr, regval, exp, i+1);
 		}
 		k_usleep(1);
 	}
