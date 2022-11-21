@@ -507,29 +507,52 @@ uint32_t qspi_fram_initialize(uint32_t test_no)
 		err_cnt++;
 	}
 
+	info("* [%d] Start QSPI FRAM [MEM1]: Initialize\n", test_no);
+	if (!qspi_fram_init(QSPI_FRAM_MEM1)) {
+		err_cnt++;
+	}
+
 	return err_cnt;
 }
 
 uint32_t qspi_fram_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
-	uint32_t write_data[QSPI_RX_FIFO_MAX_BYTE] = {0x00};
-	uint32_t mem_addr[QSPI_FRAM_MEM_ADDR_SIZE] = {0x00, 0x00, 0x00};
-	uint8_t start_val = 0x00;
+	uint32_t write_data_0[QSPI_RX_FIFO_MAX_BYTE] = {0x00};
+	uint32_t write_data_1[QSPI_RX_FIFO_MAX_BYTE] = {0x00};
+	uint32_t mem_addr_0[QSPI_FRAM_MEM_ADDR_SIZE] = {0x00, 0x00, 0x00};
+	uint32_t mem_addr_1[QSPI_FRAM_MEM_ADDR_SIZE] = {0x00, 0x10, 0x00};
+	uint8_t start_val_0 = 0x00;
+	uint8_t start_val_1 = 0x10;
 
 	info("* [%d] Start QSPI FRAM Test\n", test_no);
 
-	start_val = qspi_create_fifo_data(start_val, write_data, ARRAY_SIZE(write_data), false);
+	start_val_0 = qspi_create_fifo_data(start_val_0, write_data_0, ARRAY_SIZE(write_data_0), false);
+	start_val_1 = qspi_create_fifo_data(start_val_1, write_data_1, ARRAY_SIZE(write_data_1), false);
 
 	info("* [%d-1] Start QSPI FRAM [0]: Write data Test\n", test_no);
-	if (!qspi_fram_write_data(QSPI_FRAM_MEM0, QSPI_RX_FIFO_MAX_BYTE, write_data, mem_addr)) {
+	if (!qspi_fram_write_data(QSPI_FRAM_MEM0, QSPI_RX_FIFO_MAX_BYTE, write_data_0, mem_addr_0)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
-	info("* [%d-2] Start QSPI FRAM [0]: Read data Test\n", test_no);
-	if (!qspi_fram_read_data(QSPI_FRAM_MEM0, QSPI_RX_FIFO_MAX_BYTE, write_data, mem_addr)) {
+	info("* [%d-2] Start QSPI FRAM [1]: Write data Test\n", test_no);
+	if (!qspi_fram_write_data(QSPI_FRAM_MEM1, QSPI_RX_FIFO_MAX_BYTE, write_data_1, mem_addr_1)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-3] Start QSPI FRAM [0]: Read data Test\n", test_no);
+	if (!qspi_fram_read_data(QSPI_FRAM_MEM0, QSPI_RX_FIFO_MAX_BYTE, write_data_0, mem_addr_0)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-4] Start QSPI FRAM [1]: Read data Test\n", test_no);
+	if (!qspi_fram_read_data(QSPI_FRAM_MEM1, QSPI_RX_FIFO_MAX_BYTE, write_data_1, mem_addr_1)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;

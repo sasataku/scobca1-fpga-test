@@ -17,9 +17,11 @@ bool assert32(uint32_t addr, uint32_t exp, uint32_t retry)
 	uint32_t regval;
 
 	regval = sys_read32(addr);
-	debug("  read32  [0x%08X] 0x%08x (exp:0x%08x)\n", addr, regval, exp);
 	if (regval == exp) {
+		debug("  read32  [0x%08X] 0x%08x (exp:0x%08x)\n", addr, regval, exp);
 		return true;
+	} else if (retry == 0) {
+		err("  read32  [0x%08X] 0x%08x (exp:0x%08x)\n", addr, regval, exp);
 	}
 
 	for (uint32_t i=0; i<retry; i++) {
