@@ -9,10 +9,12 @@
 
 #include "usart.h"
 
+#include <xc.h>
 #include <pic.h>
 #include <string.h>
 
 #include "interrupt.h"
+#include "trch.h"
 
 /* Variables shared with main */
 struct usart_tx_msg tx_msg;
@@ -46,6 +48,10 @@ void putch(char ch)
         if (ch == '\n') {
                 while (!PIR1bits.TXIF);
                 TXREG = '\r';
+                /* AN774: There is a delay of one instruction cycle
+                 * after writing to TXREG, before TXIF gets
+                 * cleared. */
+                NOP();
         }
         while (!PIR1bits.TXIF);
         TXREG = ch;
