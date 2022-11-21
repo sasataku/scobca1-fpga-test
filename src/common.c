@@ -6,6 +6,13 @@
 
 #include "common.h"
 
+uint32_t read32(uint32_t addr)
+{
+	uint32_t val = sys_read32(addr);
+	printk("     read32 [addr:0x%08X] 0x%08x\n", addr, val);
+	return val;
+}
+
 void write32(uint32_t addr, uint32_t val)
 {
 	sys_write32(val, addr);
