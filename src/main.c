@@ -33,8 +33,10 @@ enum ScTestNo {
 	SC_TEST_HRMEM,
 	SC_TEST_QSPI_CFG_MEM,
 	SC_TEST_QSPI_CFG_MEM_SECTOR,
+	SC_TEST_QSPI_CFG_MEM_BLOCK,
 	SC_TEST_QSPI_DATA_MEM,
 	SC_TEST_QSPI_DATA_MEM_SECTOR,
+	SC_TEST_QSPI_DATA_MEM_BLOCK,
 	SC_TEST_QSPI_FRAM,
 	SC_TEST_CAN,
 	SC_TEST_BOARD_HEALTH_MONITOR,
@@ -55,8 +57,10 @@ void print_menu(void)
 	info("[%d] HRMEM Test\n", SC_TEST_HRMEM);
 	info("[%d] QSPI Config Memory Test (only 16byte)\n", SC_TEST_QSPI_CFG_MEM);
 	info("[%d] QSPI Config Memory Test (Sector)\n", SC_TEST_QSPI_CFG_MEM_SECTOR);
+	info("[%d] QSPI Config Memory Test (Block)\n", SC_TEST_QSPI_CFG_MEM_BLOCK);
 	info("[%d] QSPI Data Memory Test (only 16byte)\n", SC_TEST_QSPI_DATA_MEM);
 	info("[%d] QSPI Data Memory Test (Sector)\n", SC_TEST_QSPI_DATA_MEM_SECTOR);
+	info("[%d] QSPI Data Memory Test (Block)\n", SC_TEST_QSPI_DATA_MEM_BLOCK);
 	info("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
 	info("[%d] CAN Test\n", SC_TEST_CAN);
 	info("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
@@ -117,11 +121,17 @@ void main(void)
 		case SC_TEST_QSPI_CFG_MEM_SECTOR:
 			qspi_config_memory_sector_test(test_no);
 			break;
+		case SC_TEST_QSPI_CFG_MEM_BLOCK:
+			qspi_config_memory_block_test(test_no);
+			break;
 		case SC_TEST_QSPI_DATA_MEM:
 			qspi_data_memory_test(test_no);
 			break;
 		case SC_TEST_QSPI_DATA_MEM_SECTOR:
 			qspi_data_memory_sector_test(test_no);
+			break;
+		case SC_TEST_QSPI_DATA_MEM_BLOCK:
+			qspi_data_memory_block_test(test_no);
 			break;
 		case SC_TEST_QSPI_FRAM:
 			qspi_fram_test(test_no);

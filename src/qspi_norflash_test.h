@@ -12,7 +12,9 @@
 uint32_t qspi_norflash_initialize(uint32_t test_no);
 uint32_t qspi_config_memory_test(uint32_t test_no);
 uint32_t qspi_config_memory_sector_test(uint32_t test_no);
+uint32_t qspi_config_memory_block_test(uint32_t test_no);
 uint32_t qspi_data_memory_test(uint32_t test_no);
 uint32_t qspi_data_memory_sector_test(uint32_t test_no);
+uint32_t qspi_data_memory_block_test(uint32_t test_no);
 
 #endif /* SCOBCA1_FPGA_TEST_QSPI_NORFLASH_TESET_H_ */
