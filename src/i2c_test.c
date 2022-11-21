@@ -22,23 +22,27 @@ static uint32_t internal_i2c_temp_test(uint32_t slave_addr)
 	write32(SCOBCA1_FPGA_INTERNAL_I2CM_ENR, 0x01);
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x01, REG_READ_RETRY(10));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 
 	write32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x01);
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x00, REG_READ_RETRY(10));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 
 	write32(SCOBCA1_FPGA_INTERNAL_I2CM_ENR, 0x00);
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_RXFIFOR, 0x4b, REG_READ_RETRY(1));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_RXFIFOR, 0x00, REG_READ_RETRY(1));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 
@@ -55,12 +59,14 @@ static uint32_t internal_i2c_cvm_test(uint32_t slave_addr)
 	write32(SCOBCA1_FPGA_INTERNAL_I2CM_ENR, 0x01);
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x01, REG_READ_RETRY(10));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 
 	write32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x01);
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x00, REG_READ_RETRY(10));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 
@@ -70,22 +76,26 @@ static uint32_t internal_i2c_cvm_test(uint32_t slave_addr)
 	write32(SCOBCA1_FPGA_INTERNAL_I2CM_ENR, 0x01);
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x01, REG_READ_RETRY(10));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 
 	write32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x01);
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_ISR, 0x00, REG_READ_RETRY(10));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 
 	write32(SCOBCA1_FPGA_INTERNAL_I2CM_ENR, 0x00);
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_RXFIFOR, 0x71, REG_READ_RETRY(1));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 	ret = assert32(SCOBCA1_FPGA_INTERNAL_I2CM_RXFIFOR, 0x27, REG_READ_RETRY(1));
 	if (!ret) {
+		assert();
 		err_cnt++;
 	}
 

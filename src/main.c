@@ -8,6 +8,7 @@
 #include <zephyr/console/console.h>
 #include <string.h>
 #include <stdlib.h>
+#include "common.h"
 #include "watchdog.h"
 #include "i2c_test.h"
 #include "hrmem_test.h"
@@ -30,6 +31,8 @@ enum ScTestNo {
 	SC_TEST_QSPI_INIT = 1,
 	SC_TEST_INTERNAL_I2C,
 	SC_TEST_HRMEM,
+	SC_TEST_QSPI_CFG_MEM,
+	SC_TEST_QSPI_CFG_MEM_SECTOR,
 	SC_TEST_QSPI_DATA_MEM,
 	SC_TEST_QSPI_DATA_MEM_SECTOR,
 	SC_TEST_QSPI_FRAM,
@@ -47,22 +50,26 @@ enum ScTestNo {
 
 void print_menu(void)
 {
-	printk("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
-	printk("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
-	printk("[%d] HRMEM Test\n", SC_TEST_HRMEM);
-	printk("[%d] QSPI Data Memory Test\n", SC_TEST_QSPI_DATA_MEM);
-	printk("[%d] QSPI Data Memory Test (Sector)\n", SC_TEST_QSPI_DATA_MEM_SECTOR);
-	printk("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
-	printk("[%d] CAN Test\n", SC_TEST_CAN);
-	printk("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
-	printk("[%d] PUDC crack Test\n", SC_TEST_CRACK_PUDC);
-	printk("[%d] User IO crack Test\n", SC_TEST_CRACK_USER_IO);
-	printk("[%d] External I2C crack Test\n", SC_TEST_CRACK_I2C_EXT);
-	printk("[%d] System Clock crack Test\n", SC_TEST_CRACK_SYS_CLOCK);
-	printk("[%d] USB crack Test\n", SC_TEST_CRACK_USB);
-	printk("[%d] SRAM addr crack Test\n", SC_TEST_CRACK_SRAM_ADDR);
-	printk("[%d] SRAM byte crack Test\n", SC_TEST_CRACK_SRAM_BYTE);
-	printk("[%d] Bridge Test\n", SC_TEST_BRIDGE);
+	info("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
+	info("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
+	info("[%d] HRMEM Test\n", SC_TEST_HRMEM);
+	info("[%d] QSPI Config Memory Test (only 16byte)\n", SC_TEST_QSPI_CFG_MEM);
+	info("[%d] QSPI Config Memory Test (Sector)\n", SC_TEST_QSPI_CFG_MEM_SECTOR);
+	info("[%d] QSPI Data Memory Test (only 16byte)\n", SC_TEST_QSPI_DATA_MEM);
+	info("[%d] QSPI Data Memory Test (Sector)\n", SC_TEST_QSPI_DATA_MEM_SECTOR);
+	info("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
+	info("[%d] CAN Test\n", SC_TEST_CAN);
+	info("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
+
+	/* for crack and bridge testing */
+	info("[%d] PUDC crack Test\n", SC_TEST_CRACK_PUDC);
+	info("[%d] User IO crack Test\n", SC_TEST_CRACK_USER_IO);
+	info("[%d] External I2C crack Test\n", SC_TEST_CRACK_I2C_EXT);
+	info("[%d] System Clock crack Test\n", SC_TEST_CRACK_SYS_CLOCK);
+	info("[%d] USB crack Test\n", SC_TEST_CRACK_USB);
+	info("[%d] SRAM addr crack Test\n", SC_TEST_CRACK_SRAM_ADDR);
+	info("[%d] SRAM byte crack Test\n", SC_TEST_CRACK_SRAM_BYTE);
+	info("[%d] Bridge Test\n", SC_TEST_BRIDGE);
 }
 
 void main(void)
@@ -73,19 +80,19 @@ void main(void)
 	start_kick_wdt_thread();
 	console_getline_init();
 
-	printk("This is the FPGA test program for SC-OBC-A1\n");
-	printk("\n");
-	printk("* System Register IP Version : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_VER));
-	printk("* Build Information          : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_BUILDINFO));
-	printk("* Device DNA 1               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA1));
-	printk("* Device DNA 2               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA2));
-	printk("\n");
-	printk("Please input `h` to show the test program menu\n");
-	printk("\n");
+	info("This is the FPGA test program for SC-OBC-A1\n");
+	info("\n");
+	info("* System Register IP Version : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_VER));
+	info("* Build Information          : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_BUILDINFO));
+	info("* Device DNA 1               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA1));
+	info("* Device DNA 2               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA2));
+	info("\n");
+	info("Please input `h` to show the test program menu\n");
+	info("\n");
 
 	while (true) {
 
-		printk("> ");
+		info("> ");
 
 		s = console_getline();
 		if (strcmp(s, "h") == 0) {
@@ -103,6 +110,12 @@ void main(void)
 			break;
 		case SC_TEST_HRMEM:
 			hrmem_test(test_no);
+			break;
+		case SC_TEST_QSPI_CFG_MEM:
+			qspi_config_memory_test(test_no);
+			break;
+		case SC_TEST_QSPI_CFG_MEM_SECTOR:
+			qspi_config_memory_sector_test(test_no);
 			break;
 		case SC_TEST_QSPI_DATA_MEM:
 			qspi_data_memory_test(test_no);

@@ -15,7 +15,7 @@ uint32_t qspi_init(uint32_t test_no)
 	printk("* [%d] Start QSPI Initializing\n", test_no);
 
 	err_cnt += qspi_norflash_initialize(test_no);
-//	err_cnt += qspi_fram_initialize(test_no);
+	err_cnt += qspi_fram_initialize(test_no);
 
 	print_result(test_no, err_cnt);
 

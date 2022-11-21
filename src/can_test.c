@@ -45,27 +45,34 @@ static void convert_can_data_to_word(uint8_t *can_data, uint8_t size, uint32_t *
 
 static bool can_loopback_test_init(void)
 {
-	printk("* Set Baudrate to 1Mbps\n");
+	debug("* Set Clear ISR\n");
+	write32(SCOBCA1_FPGA_CAN_ISR, 0xFFFFFFFF);
+
+	debug("* Set Baudrate to 1Mbps\n");
 	write32(SCOBCA1_FPGA_CAN_TQPR, 0x0001);
 	write32(SCOBCA1_FPGA_CAN_BTSR, 0x01A7);
 
-	printk("* Activate Test mode\n");
+	debug("* Activate Test mode\n");
 	write32(SCOBCA1_FPGA_CAN_STMCR, 0x01);
 
-	printk("* Enable CAN\n");
+	debug("* Enable CAN\n");
 	write32(SCOBCA1_FPGA_CAN_ENR, 0x01);
 
-	printk("* Verify CAN Status Registe (Error Active: 0x04)\n");
+	k_usleep(10);
+
+	debug("* Verify CAN Status Registe (Error Active: 0x04)\n");
 	if (!assert32(SCOBCA1_FPGA_CAN_STSR, 0x04, REG_READ_RETRY(10))) {
+		assert();
 		return false;
 	}
 
-	printk("* Verify CAN Interrupt Registe (No interupt: 0x00)\n");
+	debug("* Verify CAN Interrupt Registe (No interupt: 0x00)\n");
 	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, REG_READ_RETRY(10))) {
+		assert();
 		return false;
 	}
 
-	printk("* Clear All FIFO\n");
+	debug("* Clear All FIFO\n");
 	write32(SCOBCA1_FPGA_CAN_FIFORR, 0xFFFFFFFF);
 
 	return true;
@@ -73,14 +80,15 @@ static bool can_loopback_test_init(void)
 
 static bool can_loopback_test_terminate(void)
 {
-	printk("* Disable CAN\n");
+	debug("* Disable CAN\n");
 	write32(SCOBCA1_FPGA_CAN_ENR, 0x00);
 
-	printk("* Disable Test mode\n");
+	debug("* Disable Test mode\n");
 	write32(SCOBCA1_FPGA_CAN_STMCR, 0x00);
 
-	printk("* Verify CAN Interrupt Register (No interupt: 0x00)\n");
+	debug("* Verify CAN Interrupt Register (No interupt: 0x00)\n");
 	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, REG_READ_RETRY(10))) {
+		assert();
 		return false;
 	}
 
@@ -92,25 +100,29 @@ static bool can_send_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *can_dat
 	uint32_t data_word1;
 	uint32_t data_word2;
 
-	printk("* Send CAN ID\n");
+	debug("* Send CAN ID\n");
 	write32(SCOBCA1_FPGA_CAN_TMR1, get_idr(can_id, can_ext_id));
 
-	printk("* Send CAN Packet size\n");
+	debug("* Send CAN Packet size\n");
 	write32(SCOBCA1_FPGA_CAN_TMR2, size);
 
-	printk("* Send CAN Data %d byte\n", size);
+	debug("* Send CAN Data %d byte\n", size);
 	convert_can_data_to_word(can_data, size, &data_word1, &data_word2);
 	write32(SCOBCA1_FPGA_CAN_TMR3, data_word1);
 	write32(SCOBCA1_FPGA_CAN_TMR4, data_word2);
 
-	printk("* Verify CAN Interrupt Registe (CAN_TRNSDN/CAN_RCVDN/CAN_RXFVAL)\n");
+	k_usleep(10);
+
+	debug("* Verify CAN Interrupt Registe (CAN_TRNSDN/CAN_RCVDN/CAN_RXFVAL)\n");
 	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x31, REG_READ_RETRY(10))) {
+		assert();
 		return false;
 	}
 
-	printk("* Clear CAN Interrupt Register and Verify\n");
+	debug("* Clear CAN Interrupt Register and Verify\n");
 	write32(SCOBCA1_FPGA_CAN_ISR, 0x31);
 	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, REG_READ_RETRY(10))) {
+		assert();
 		return false;
 	}
 
@@ -124,22 +136,26 @@ static bool can_recv_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *exp_can
 	uint32_t data_word1;
 	uint32_t data_word2;
 
-	printk("* Read CAN ID and Verify\n");
+	debug("* Read CAN ID and Verify\n");
 	if (!assert32(SCOBCA1_FPGA_CAN_RMR1, get_idr(can_id, can_ext_id), REG_READ_RETRY(1))) {
+		assert();
 		ret = false;
 	}
 
-	printk("* Read CAN Packet size and Verify\n");
+	debug("* Read CAN Packet size and Verify\n");
 	if (!assert32(SCOBCA1_FPGA_CAN_RMR2, size, REG_READ_RETRY(1))) {
+		assert();
 		ret = false;
 	}
 
-	printk("* ReadCAN Data and Verify\n");
+	debug("* ReadCAN Data and Verify\n");
 	convert_can_data_to_word(exp_can_data, size, &data_word1, &data_word2);
 	if (!assert32(SCOBCA1_FPGA_CAN_RMR3, data_word1, REG_READ_RETRY(1))) {
+		assert();
 		ret = false;
 	}
 	if (!assert32(SCOBCA1_FPGA_CAN_RMR4, data_word2, REG_READ_RETRY(1))) {
+		assert();
 		ret = false;
 	}
 
@@ -153,26 +169,30 @@ static uint32_t can_loopback_test(void)
 	uint32_t can_ext_id = 0x35678;
 	uint8_t can_data[CAN_PKT_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF1};
 
-	printk("* [#1] Start CAN Test Initializing (for Loop back)\n");
+	debug("* [#1] Start CAN Test Initializing (for Loop back)\n");
 	if (!can_loopback_test_init()) {
+		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
-	printk("* [#2] Start CAN Send Test\n");
+	debug("* [#2] Start CAN Send Test\n");
 	if (!can_send_test(can_id, can_ext_id, can_data, CAN_PKT_SIZE)) {
+		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
-	printk("* [#3] Start CAN Recv Test\n");
+	debug("* [#3] Start CAN Recv Test\n");
 	if (!can_recv_test(can_id, can_ext_id, can_data, CAN_PKT_SIZE)) {
+		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
-	printk("* [#4] Start CAN Test Terminating\n");
+	debug("* [#4] Start CAN Test Terminating\n");
 	if (!can_loopback_test_terminate()) {
+		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
@@ -186,9 +206,9 @@ uint32_t can_test(uint32_t test_no)
 	uint32_t ret;
 	uint32_t err_cnt = 0;
 
-	printk("* [%d] Start CAN Test\n", test_no);
+	info("* [%d] Start CAN Test\n", test_no);
 
-	printk("* [%d-1] Start CAN Loop back Test\n", test_no);
+	info("* [%d-1] Start CAN Loop back Test\n", test_no);
 	ret = can_loopback_test();
 	err_cnt += ret;
 

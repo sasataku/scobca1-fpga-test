@@ -12,10 +12,8 @@
 #define SCOBCA1_TEMP_LIMIT_UPPER (50)
 #define SCOBCA1_TEMP_LIMIT_LOWER (-10)
 
-uint32_t bhm_enable(void);
-uint32_t bhm_read_sensor_data_test(void);
+bool bhm_enable(void);
+uint32_t bhm_read_sensor_data(void);
 uint32_t bhm_test(uint32_t test_no);
-
-
 
 #endif /* SCOBCA1_FPGA_TEST_BHM_TESET_H_ */
