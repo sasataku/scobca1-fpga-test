@@ -5,6 +5,7 @@
  */
 
 #include "common.h"
+#include "system_reg.h"
 #include "system_monitor_reg.h"
 #include "general_timer_reg.h"
 #include "bhm_test.h"
@@ -77,7 +78,7 @@ static uint32_t assert_temp(void)
 		if (assert_i2c_access(raw_tmp)) {
 			if ((tmp < SCOBCA1_TEMP_LIMIT_LOWER || tmp > SCOBCA1_TEMP_LIMIT_UPPER)) {
 				err("  !!! Assertion failed: abnormal temperature (Temperature Sensor %d)\n", i+1);
-				is_exit = true;
+				write32(SCOBCA1_FPGA_SYSREG_PWRCYCLE, 0x5A5A0001);
 				err_cnt++;
 			}
 		} else {
@@ -91,7 +92,7 @@ static uint32_t assert_temp(void)
 	info("  XADC Temperature    : %.4f C (RAW:0x%08x)\n", xadc_tmp, xadc_raw_temp);
 	if ((xadc_tmp < SCOBCA1_TEMP_LIMIT_LOWER || xadc_tmp > SCOBCA1_TEMP_LIMIT_UPPER)) {
 		err("  !!! Assertion failed: abnormal temperature (XADC Temperature)\n");
-		is_exit = true;
+		write32(SCOBCA1_FPGA_SYSREG_PWRCYCLE, 0x5A5A0001);
 		err_cnt++;
 	}
 
