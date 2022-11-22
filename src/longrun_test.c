@@ -20,6 +20,7 @@
 
 K_THREAD_STACK_DEFINE(_longrun_thread_stack, LONGRUN_STACK_SIZE);
 static struct k_thread _k_thread_data;
+static uint32_t erase_count = 0;
 static uint32_t last_erase_time = 0;
 static uint8_t cfg_write_val_0 = 0x00;
 static uint8_t cfg_write_val_1 = 0x10;
@@ -112,6 +113,7 @@ static uint32_t config_memory_erase(void)
 		err_cnt++;
 	}
 
+	erase_count++;
 	return err_cnt;
 }
 
@@ -337,7 +339,8 @@ static void start_longrun_test(void *p1, void *p2, void *p3)
 			err_cnt += data_memory_read();
 		}
 
-		info("* Loop [%d][%d] Total assertion: %d\n", loop_count, get_obc_uptime(), err_cnt);
+		info("* Loop [%d][uptime:%d][erase:%d] Total assertion: %d\n",
+					loop_count, get_obc_uptime(), erase_count, err_cnt);
 
 		if (is_exit) {
 			printk("* Stop Long Run Test\n");

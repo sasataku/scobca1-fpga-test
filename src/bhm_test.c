@@ -73,10 +73,10 @@ static uint32_t assert_temp(void)
 	for (uint8_t i=0; i<ARRAY_SIZE(tmp_regs); i++) {
 		raw_tmp = sys_read32(tmp_regs[i]);
 		tmp = convert_temp(raw_tmp);
-		info("  Tempature Sensor %d  : %.4f C (RAW:0x%08x)\n", i+1, tmp, raw_tmp);
+		info("  Temperature Sensor %d : %.4f C (RAW:0x%08x)\n", i+1, tmp, raw_tmp);
 		if (assert_i2c_access(raw_tmp)) {
 			if ((tmp < SCOBCA1_TEMP_LIMIT_LOWER || tmp > SCOBCA1_TEMP_LIMIT_UPPER)) {
-				err("  !!! Assertion failed: abnormal tempature (Tempature Sensor %d)\n", i+1);
+				err("  !!! Assertion failed: abnormal temperature (Temperature Sensor %d)\n", i+1);
 				is_exit = true;
 				err_cnt++;
 			}
@@ -85,12 +85,12 @@ static uint32_t assert_temp(void)
 		}
 	}
 
-	/* XADC Tempature */
+	/* XADC Temperature */
 	xadc_raw_temp = sys_read32(SCOBCA1_FPGA_SYSMON_XADC_TEMP);
 	xadc_tmp = convert_xadc_temp(xadc_raw_temp);
-	info("  XADC Tempature     : %.4f C (RAW:0x%08x)\n", xadc_tmp, xadc_raw_temp);
+	info("  XADC Temperature    : %.4f C (RAW:0x%08x)\n", xadc_tmp, xadc_raw_temp);
 	if ((xadc_tmp < SCOBCA1_TEMP_LIMIT_LOWER || xadc_tmp > SCOBCA1_TEMP_LIMIT_UPPER)) {
-		err("  !!! Assertion failed: abnormal tempature (XADC Tempature)\n");
+		err("  !!! Assertion failed: abnormal temperature (XADC Temperature)\n");
 		is_exit = true;
 		err_cnt++;
 	}
@@ -185,7 +185,7 @@ bool bhm_enable(void)
 	/*
 		I2C access timing
 		Current Voltage: 0.1 ms
-		Tempature      : 1.7 ms
+		Temperature      : 1.7 ms
 	*/
 	write32(SCOBCA1_FPGA_GPTMR_HITCR, 0x00280000);
 	write32(SCOBCA1_FPGA_GPTMR_HITPR, 0x095F);
