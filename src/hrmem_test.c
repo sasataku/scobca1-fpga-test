@@ -13,7 +13,7 @@
 /*
  *  Write 1K byte to HRMEM and read/verify it
  */
-uint32_t hrmem_rw_test(uint32_t size, uint32_t start_val, uint32_t *next_val)
+uint32_t hrmem_rw(uint32_t size, uint32_t start_val, uint32_t *next_val)
 {
 	bool ret;
 	uint32_t err_cnt = 0;
@@ -52,7 +52,7 @@ uint32_t hrmem_test(uint32_t test_no)
 
 	printk("* [%d] Start HRMEM Test\n", test_no);
 
-	err_cnt += hrmem_rw_test(HRMEM_WRITE_BYTE, start_val, &next_val);
+	err_cnt += hrmem_rw(HRMEM_WRITE_BYTE, start_val, &next_val);
 
 	print_result(test_no, err_cnt);
 

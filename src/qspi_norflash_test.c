@@ -9,10 +9,6 @@
 #include "common.h"
 
 #define QSPI_NOR_FLASH_MEM_ADDR_SIZE (3u)
-#define QSPI_DATA_MEM0 (0u)
-#define QSPI_DATA_MEM1 (1u)
-#define QSPI_CFG_MEM0  (0u)
-#define QSPI_CFG_MEM1  (1u)
 #define QSPI_DATA_MEM0_SS (0x01)
 #define QSPI_DATA_MEM1_SS (0x02)
 #define QSPI_ASR_IDLE (0x00)
@@ -20,15 +16,6 @@
 #define QSPI_RX_FIFO_MAX_BYTE (16u)
 #define QSPI_NOR_FLASH_DUMMY_CYCLE_COUNT (4u)
 #define QSPI_SPI_MODE_QUAD (0x00020000)
-#define QSPI_NOR_FLASH_SECTOR_BYTE (4*1024)
-#define QSPI_NOR_FLASH_BLOCK_BYTE  (64*1024)
-
-enum QspiEraseType
-{
-	QSPI_ERASE_SECTOR,		/* 4KB */
-	QSPI_ERASE_HALF_BLOCK,	/* 32KB */
-	QSPI_ERASE_BLOCK,		/* 64KB */
-};
 
 static uint32_t qspi_select_mem(uint32_t base, uint8_t mem_no)
 {
@@ -525,7 +512,7 @@ static bool qspi_memory_data_quad_write(uint32_t base, uint32_t spi_ss, uint32_t
 	return true;
 }
 
-static bool qspi_norflash_erase(uint32_t base, uint8_t mem_no, enum QspiEraseType type,
+bool qspi_norflash_erase(uint32_t base, uint8_t mem_no, enum QspiEraseType type,
 								uint32_t mem_addr, bool is_wait_idle)
 {
 	uint32_t spi_ss;
