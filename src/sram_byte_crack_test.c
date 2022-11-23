@@ -5,41 +5,46 @@
  */
 
 #include "common.h"
-#include "test_register.h"
 #include "sram_byte_crack_test.h"
 
 uint32_t sram_byte_crack_test(uint32_t test_no)
 {
-	printk("*** SRAM byte crack test starts ***\n");
+	info("*** SRAM byte crack test starts ***\n");
 	uint32_t err_num = 0;
 
-	const uint32_t sram_base_addr = 0x00200000; // avobe 2MByte
-	const uint32_t sram_last_addr = 0x00400000; // 2MByte
-	const uint32_t sram_size = sram_last_addr - sram_base_addr;
+	const uint8_t byte_data1 = 0x12;
+	const uint8_t byte_data2 = 0x34;
+	const uint8_t byte_data3 = 0x56;
+	const uint8_t byte_data4 = 0x78;
 
-	// write different data to each address
-	uint32_t sram_addr = 0x00000000;
-	write32(sram_addr + sram_base_addr, sram_addr);
+	const uint32_t word_data =
+		   	(byte_data1 << 24) + (byte_data2 << 16) + (byte_data3 << 8) + byte_data4;
 
-	for(sram_addr = 0x00000004;  sram_addr < sram_size;){
-		write32((sram_addr + sram_base_addr), sram_addr);
-		sram_addr = sram_addr << 1;
-	}
+	uint32_t work_mem = 0;
+	mem_addr_t target_addr = (mem_addr_t)&work_mem;
 
-	// read data from each address and check if correct
-	sram_addr = 0x00000000;
-	if(read32(sram_addr + sram_base_addr) != sram_addr){
-		err_num++;
-	}
+    /* write 32bit work area by byte access */
+	sys_write8(byte_data1, (mem_addr_t)(target_addr + 3));
+	sys_write8(byte_data2, (mem_addr_t)(target_addr + 2));
+	sys_write8(byte_data3, (mem_addr_t)(target_addr + 1));
+	sys_write8(byte_data4, (mem_addr_t)(target_addr));
 
-	for(sram_addr = 0x00000004;  sram_addr < sram_size;){
-		if(read32(sram_addr + sram_base_addr) != sram_addr){
+	debug("data: 0x%08x\n", work_mem);
+
+	if(work_mem != word_data){
 			err_num++;
-		}
-		sram_addr = sram_addr << 1;
 	}
 
-	printk("*** test done, error count: %d ***\n", err_num);
+    /* read 32bit work area by byte access */
+	if(sys_read8((mem_addr_t)(target_addr + 3)) != byte_data1 ||
+	   sys_read8((mem_addr_t)(target_addr + 2)) != byte_data2 ||
+	   sys_read8((mem_addr_t)(target_addr + 1)) != byte_data3 ||
+	   sys_read8((mem_addr_t)(target_addr)) != byte_data4)
+	{
+			err_num++;
+	}
+
+	info("*** test done, error count: %d ***\n", err_num);
 
 	return err_num;
 }
