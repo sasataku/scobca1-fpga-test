@@ -11,7 +11,10 @@
 
 #define SCOBCA1_FPGA_SYSMON_WDOG_CTRL        (0x4F040000) /* Watchdog Control Register */
 #define SCOBCA1_FPGA_SYSMON_WDOG_SIVAL       (0x4F040010) /* Watchdog Signal Interval Register */
-#define SCOBCA1_FPGA_SYSMON_XADC_REG         (0x4F041000) /* XADC Register Window */
+#define SCOBCA1_FPGA_SYSMON_XADC_TEMP        (0x4F041000) /* XADC Tempature */
+#define SCOBCA1_FPGA_SYSMON_XADC_VCCINT      (0x4F041010) /* XADC VCCINT 1.0V */
+#define SCOBCA1_FPGA_SYSMON_XADC_VCCAUX      (0x4F041020) /* XADC VCCAUX 1.8V */
+#define SCOBCA1_FPGA_SYSMON_XADC_VCCBRAM     (0x4F041060) /* XADC VCCBRAM 1.0V */
 #define SCOBCA1_FPGA_SYSMON_BHM_INICTLR      (0x4F042000) /* Board Health Initialization Access Control Register */
 #define SCOBCA1_FPGA_SYSMON_BHM_MONCTLR      (0x4F042004) /* Board Health Monitoring Access Control Register */
 #define SCOBCA1_FPGA_SYSMON_BHM_ISR          (0x4F042010) /* Board Health Interrupt Status Register */

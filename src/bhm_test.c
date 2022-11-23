@@ -5,9 +5,12 @@
  */
 
 #include "common.h"
+#include "system_reg.h"
 #include "system_monitor_reg.h"
 #include "general_timer_reg.h"
 #include "bhm_test.h"
+
+extern bool is_exit;
 
 static float convert_temp(uint32_t raw_tmp)
 {
@@ -19,7 +22,16 @@ static float convert_temp(uint32_t raw_tmp)
 	return conv_tmp;
 }
 
-static float convert_cv_shunt(uint32_t raw_snt)
+static float convert_xadc_temp(uint32_t raw_tmp)
+{
+	float conv_tmp;
+
+	conv_tmp = ((((raw_tmp & 0x0000FFF0) >> 4) * 503.975) / 4096) - 273.15;
+
+	return conv_tmp;
+}
+
+static uint32_t convert_cv_shunt(uint32_t raw_snt)
 {
 	return ((raw_snt >> 3) * 40);
 }
@@ -27,6 +39,15 @@ static float convert_cv_shunt(uint32_t raw_snt)
 static uint32_t convert_cv_bus(uint32_t raw_bus)
 {
 	return ((raw_bus >> 3) * 8);
+}
+
+static float convert_cv_xadc(uint32_t raw_xadc)
+{
+	float conv_cv;
+
+	conv_cv = (raw_xadc & 0x0000FFF0) >> 4;
+
+	return conv_cv / 4096 * 3;
 }
 
 static bool assert_i2c_access(uint32_t raw_val)
@@ -42,8 +63,10 @@ static bool assert_i2c_access(uint32_t raw_val)
 static uint32_t assert_temp(void)
 {
 	uint32_t err_cnt = 0;
+	uint32_t xadc_raw_temp;
 	uint32_t raw_tmp;
 	float tmp;
+	float xadc_tmp;
 	uint32_t tmp_regs[] = {SCOBCA1_FPGA_SYSMON_BHM_TEMP1R,
 							SCOBCA1_FPGA_SYSMON_BHM_TEMP2R,
 							SCOBCA1_FPGA_SYSMON_BHM_TEMP3R};
@@ -51,15 +74,26 @@ static uint32_t assert_temp(void)
 	for (uint8_t i=0; i<ARRAY_SIZE(tmp_regs); i++) {
 		raw_tmp = sys_read32(tmp_regs[i]);
 		tmp = convert_temp(raw_tmp);
-		info("  Tempature Sensor %d  : %.4f C (RAW:0x%08x)\n", i+1, tmp, raw_tmp);
+		info("  Temperature Sensor %d : %.4f C (RAW:0x%08x)\n", i+1, tmp, raw_tmp);
 		if (assert_i2c_access(raw_tmp)) {
 			if ((tmp < SCOBCA1_TEMP_LIMIT_LOWER || tmp > SCOBCA1_TEMP_LIMIT_UPPER)) {
-				err("  !!! Assertion failed: abnormal tempature (Tempature Sensor %d)\n", i+1);
+				err("  !!! Assertion failed: abnormal temperature (Temperature Sensor %d)\n", i+1);
+				write32(SCOBCA1_FPGA_SYSREG_PWRCYCLE, 0x5A5A0001);
 				err_cnt++;
 			}
 		} else {
 			err_cnt++;
 		}
+	}
+
+	/* XADC Temperature */
+	xadc_raw_temp = sys_read32(SCOBCA1_FPGA_SYSMON_XADC_TEMP);
+	xadc_tmp = convert_xadc_temp(xadc_raw_temp);
+	info("  XADC Temperature    : %.4f C (RAW:0x%08x)\n", xadc_tmp, xadc_raw_temp);
+	if ((xadc_tmp < SCOBCA1_TEMP_LIMIT_LOWER || xadc_tmp > SCOBCA1_TEMP_LIMIT_UPPER)) {
+		err("  !!! Assertion failed: abnormal temperature (XADC Temperature)\n");
+		write32(SCOBCA1_FPGA_SYSREG_PWRCYCLE, 0x5A5A0001);
+		err_cnt++;
 	}
 
 	return err_cnt;
@@ -68,8 +102,9 @@ static uint32_t assert_temp(void)
 static uint32_t assert_cv(void)
 {
 	uint32_t err_cnt = 0;
-	uint32_t raw_snt, raw_bus;
+	uint32_t raw_snt, raw_bus, raw_xadc;
 	uint32_t snt, bus;
+	float xadc;
 	uint32_t snt_regs[] = {SCOBCA1_FPGA_SYSMON_BHM_1V0SNTVR,
 							SCOBCA1_FPGA_SYSMON_BHM_1V8SNTVR,
 							SCOBCA1_FPGA_SYSMON_BHM_3V3SNTVR,
@@ -82,12 +117,18 @@ static uint32_t assert_cv(void)
 							SCOBCA1_FPGA_SYSMON_BHM_3V3SYSABUSVR,
 							SCOBCA1_FPGA_SYSMON_BHM_3V3SYSBBUSVR,
 							SCOBCA1_FPGA_SYSMON_BHM_3V3IOBUSVR};
+	uint32_t xadc_regs[] = {SCOBCA1_FPGA_SYSMON_XADC_VCCINT,
+							SCOBCA1_FPGA_SYSMON_XADC_VCCAUX,
+							SCOBCA1_FPGA_SYSMON_XADC_VCCBRAM};
 	const char vdd_chars[][16] = {"VDD 1V0      ",
 									"VDD 1V8      ",
 									"VDD 3V3      ",
 									"VDD 3V3 SYS-A",
 									"VDD 3V3 SYS-B",
 									"VDD 3V3 IO   "};
+	const char xadc_chars[][24] = {"XADC VCCINT 1V0 ",
+									"XADC VCCAUX 1V8 ",
+									"XADC VCCBRAM 1V0"};
 
 	for (uint8_t i=0; i<ARRAY_SIZE(snt_regs); i++) {
 		raw_snt = sys_read32(snt_regs[i]);
@@ -102,6 +143,13 @@ static uint32_t assert_cv(void)
 		if (!assert_i2c_access(raw_bus)) {
 			err_cnt++;
 		}
+	}
+
+	/* XADC Voltage */
+	for (uint8_t i=0; i<ARRAY_SIZE(xadc_regs); i++) {
+		raw_xadc = sys_read32(xadc_regs[i]);
+		xadc = convert_cv_xadc(raw_xadc);
+		info("  %s    : %.4f v (RAW:0x%08x)\n", xadc_chars[i], xadc, raw_xadc);
 	}
 
 	return err_cnt;
@@ -121,7 +169,7 @@ bool bhm_enable(void)
 	debug("* [#4] Enable all sensor device initialization\n");
 	write32(SCOBCA1_FPGA_SYSMON_BHM_INICTLR, 0x0001001F);
 
-	k_sleep(K_MSEC(1));
+	k_sleep(K_MSEC(100));
 
 	debug("* [#5] Verify initialization and clear\n");
 	if (!assert32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0x01, REG_READ_RETRY(10))) {
@@ -138,7 +186,7 @@ bool bhm_enable(void)
 	/*
 		I2C access timing
 		Current Voltage: 0.1 ms
-		Tempature      : 1.7 ms
+		Temperature      : 1.7 ms
 	*/
 	write32(SCOBCA1_FPGA_GPTMR_HITCR, 0x00280000);
 	write32(SCOBCA1_FPGA_GPTMR_HITPR, 0x095F);

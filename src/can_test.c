@@ -162,7 +162,7 @@ static bool can_recv_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *exp_can
 	return ret;
 }
 
-static uint32_t can_loopback_test(void)
+uint32_t can_loopback(void)
 {
 	uint32_t err_cnt = 0;
 	uint16_t can_id = 0x0123;
@@ -209,7 +209,7 @@ uint32_t can_test(uint32_t test_no)
 	info("* [%d] Start CAN Test\n", test_no);
 
 	info("* [%d-1] Start CAN Loop back Test\n", test_no);
-	ret = can_loopback_test();
+	ret = can_loopback();
 	err_cnt += ret;
 
 	print_result(test_no, err_cnt);

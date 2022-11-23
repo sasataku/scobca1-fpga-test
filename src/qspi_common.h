@@ -56,6 +56,20 @@
 #define SCOBCA1_FPGA_FRAM_QSPI_FTLSR (SCOBCA1_FPGA_FRAM_BASE_ADDR + QSPI_FTLSR_OFFSET)
 #define SCOBCA1_FPGA_FRAM_QSPI_VER (SCOBCA1_FPGA_FRAM_BASE_ADDR + QSPI_VER_OFFSET)
 
+#define QSPI_DATA_MEM0 (0u)
+#define QSPI_DATA_MEM1 (1u)
+#define QSPI_CFG_MEM0  (0u)
+#define QSPI_CFG_MEM1  (1u)
+#define QSPI_NOR_FLASH_SECTOR_BYTE (4*1024)
+#define QSPI_NOR_FLASH_BLOCK_BYTE  (64*1024)
+
+enum QspiEraseType
+{
+	QSPI_ERASE_SECTOR,      /* 4KB */
+	QSPI_ERASE_HALF_BLOCK,  /* 32KB */
+	QSPI_ERASE_BLOCK,       /* 64KB */
+};
+
 uint32_t qspi_init(uint32_t test_no);
 uint32_t qspi_create_fifo_data(uint8_t start_val, uint32_t *data, size_t size, bool fill);
 

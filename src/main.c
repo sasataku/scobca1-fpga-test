@@ -28,15 +28,18 @@
 #include "can_test.h"
 #include "bhm_test.h"
 #include "system_reg.h"
+#include "longrun_test.h"
 
 enum ScTestNo {
 	SC_TEST_QSPI_INIT = 1,
-	SC_TEST_INTERNAL_I2C,
+	SC_TEST_LONG_RUN,
 	SC_TEST_HRMEM,
 	SC_TEST_QSPI_CFG_MEM,
 	SC_TEST_QSPI_CFG_MEM_SECTOR,
+	SC_TEST_QSPI_CFG_MEM_BLOCK,
 	SC_TEST_QSPI_DATA_MEM,
 	SC_TEST_QSPI_DATA_MEM_SECTOR,
+	SC_TEST_QSPI_DATA_MEM_BLOCK,
 	SC_TEST_QSPI_FRAM,
 	SC_TEST_CAN,
 	SC_TEST_BOARD_HEALTH_MONITOR,
@@ -52,15 +55,19 @@ enum ScTestNo {
 	SC_TEST_BRIDGE,
 };
 
+bool is_exit;
+
 void print_menu(void)
 {
 	info("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
-	info("[%d] Internal I2C Test\n", SC_TEST_INTERNAL_I2C);
+	info("[%d] Long Run Test\n", SC_TEST_LONG_RUN);
 	info("[%d] HRMEM Test\n", SC_TEST_HRMEM);
 	info("[%d] QSPI Config Memory Test (only 16byte)\n", SC_TEST_QSPI_CFG_MEM);
 	info("[%d] QSPI Config Memory Test (Sector)\n", SC_TEST_QSPI_CFG_MEM_SECTOR);
+	info("[%d] QSPI Config Memory Test (Block)\n", SC_TEST_QSPI_CFG_MEM_BLOCK);
 	info("[%d] QSPI Data Memory Test (only 16byte)\n", SC_TEST_QSPI_DATA_MEM);
 	info("[%d] QSPI Data Memory Test (Sector)\n", SC_TEST_QSPI_DATA_MEM_SECTOR);
+	info("[%d] QSPI Data Memory Test (Block)\n", SC_TEST_QSPI_DATA_MEM_BLOCK);
 	info("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
 	info("[%d] CAN Test\n", SC_TEST_CAN);
 	info("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
@@ -104,15 +111,18 @@ void main(void)
 		if (strcmp(s, "h") == 0) {
 			print_menu();
 			continue;
+		} else if (strcmp(s, "q") == 0) {
+			is_exit = true;
+			continue;
 		}
 
 		test_no = strtol(s, NULL, 10);
 		switch (test_no) {
-		case SC_TEST_QSPI_INIT: 
+		case SC_TEST_QSPI_INIT:
 			qspi_init(test_no);
 			break;
-		case SC_TEST_INTERNAL_I2C:
-			internal_i2c_test(test_no);
+		case SC_TEST_LONG_RUN:
+			longrun_test(test_no);
 			break;
 		case SC_TEST_HRMEM:
 			hrmem_test(test_no);
@@ -123,11 +133,17 @@ void main(void)
 		case SC_TEST_QSPI_CFG_MEM_SECTOR:
 			qspi_config_memory_sector_test(test_no);
 			break;
+		case SC_TEST_QSPI_CFG_MEM_BLOCK:
+			qspi_config_memory_block_test(test_no);
+			break;
 		case SC_TEST_QSPI_DATA_MEM:
 			qspi_data_memory_test(test_no);
 			break;
 		case SC_TEST_QSPI_DATA_MEM_SECTOR:
 			qspi_data_memory_sector_test(test_no);
+			break;
+		case SC_TEST_QSPI_DATA_MEM_BLOCK:
+			qspi_data_memory_block_test(test_no);
 			break;
 		case SC_TEST_QSPI_FRAM:
 			qspi_fram_test(test_no);

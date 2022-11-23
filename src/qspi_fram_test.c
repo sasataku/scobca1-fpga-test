@@ -14,7 +14,7 @@
 #define QSPI_FRAM_MEM1_SS (0x02)
 #define QSPI_ASR_IDLE (0x00)
 #define QSPI_ASR_BUSY (0x01)
-#define QSPI_RX_FIFO_MAX_BYTE (16u)
+#define QSPI_FIFO_MAX_BYTE (16u)
 #define QSPI_NOR_FLASH_DUMMY_CYCLE_COUNT (2u)
 #define QSPI_SPI_MODE_QUAD   (0x00020000)
 
@@ -58,6 +58,13 @@ static void write_data_to_flash(uint32_t *write_data, size_t size)
 	for (uint8_t i=0; i<size; i++) {
 		write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, write_data[i]);
 	}
+}
+
+static void write_mem_addr_to_flash(uint32_t mem_addr)
+{
+	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, (mem_addr & 0x00FF0000) >> 16);
+	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, (mem_addr & 0x0000FF00) >> 8);
+	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, (mem_addr & 0x000000FF));
 }
 
 static bool send_dummy_cycle(uint8_t dummy_count)
@@ -219,13 +226,8 @@ static bool set_quad_io_mode(uint32_t spi_ss)
 
 	debug("* Set QUAD I/O mode and dummy cycle (4) to configuration register\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x71);
-	/*
-	 * Configuraiton Resister
-	 *   Non volatile: 0x000002
-	 *   Volatile    : 0x070002
-	 */
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
-	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x70);
+	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x02);
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x42);
 	if (!is_qspi_idle()) {
@@ -355,7 +357,7 @@ static bool qspi_fram_set_quad_read_mode(uint32_t spi_ss)
 	return true;
 }
 
-static bool qspi_fram_quad_read_data(uint32_t spi_ss, uint8_t read_size, uint32_t *exp_vals, uint32_t *mem_addr)
+static bool qspi_fram_quad_read_data(uint32_t spi_ss, uint8_t read_size, uint32_t *exp_vals, uint32_t mem_addr)
 {
 	bool ret;
 
@@ -363,7 +365,7 @@ static bool qspi_fram_quad_read_data(uint32_t spi_ss, uint8_t read_size, uint32_
 	write32(SCOBCA1_FPGA_FRAM_QSPI_ACR, QSPI_SPI_MODE_QUAD + spi_ss);
 
 	debug("* Send Memory Address (3byte)\n");
-	write_data_to_flash(mem_addr, QSPI_FRAM_MEM_ADDR_SIZE);
+	write_mem_addr_to_flash(mem_addr);
 	
 	debug("* Send Mode (0x00)\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
@@ -390,7 +392,7 @@ static bool qspi_fram_quad_read_data(uint32_t spi_ss, uint8_t read_size, uint32_
 	return ret;
 }
 
-static bool qspi_fram_quad_write_data(uint32_t spi_ss, uint8_t write_size, uint32_t *write_data, uint32_t *mem_addr)
+static bool qspi_fram_quad_write_data(uint32_t spi_ss, uint8_t write_size, uint32_t *write_data, uint32_t mem_addr)
 {
 	if (!activate_spi_ss(spi_ss) ) {
 		return false;
@@ -407,7 +409,7 @@ static bool qspi_fram_quad_write_data(uint32_t spi_ss, uint8_t write_size, uint3
 	write32(SCOBCA1_FPGA_FRAM_QSPI_ACR, QSPI_SPI_MODE_QUAD + spi_ss);
 
 	debug("* Send Memory Address (3byte)\n");
-	write_data_to_flash(mem_addr, QSPI_FRAM_MEM_ADDR_SIZE);
+	write_mem_addr_to_flash(mem_addr);
 
 	debug("* Send Mode (0x00)\n");
 	write32(SCOBCA1_FPGA_FRAM_QSPI_TDR, 0x00);
@@ -432,9 +434,11 @@ static bool qspi_fram_quad_write_data(uint32_t spi_ss, uint8_t write_size, uint3
 	return true;
 }
 
-static bool qspi_fram_write_data(uint8_t mem_no, uint8_t write_size, uint32_t *write_data, uint32_t *mem_addr)
+bool qspi_fram_multi_write(uint8_t mem_no, uint32_t mem_addr, uint32_t size, uint8_t start_val)
 {
 	uint32_t spi_ss;
+	uint32_t write_data[QSPI_FIFO_MAX_BYTE];
+	uint16_t loop_count;
 
 	if (mem_no > 1) {
 		err("Invalid Mem number %d (expected 0 or 1)\n", mem_no);
@@ -447,30 +451,39 @@ static bool qspi_fram_write_data(uint8_t mem_no, uint8_t write_size, uint32_t *w
 		spi_ss = QSPI_FRAM_MEM1_SS;
 	}
 
-	debug("* [#1] Set to `Write Enable'\n");
-	if (!set_write_enable(spi_ss, true)) {
-		assert();
-		return false;
-	}
+	loop_count = size/QSPI_FIFO_MAX_BYTE;
+	for (uint16_t i=0; i<loop_count; i++) {
 
-	debug("* [#2] Write Data (QUAD Mode)\n");
-	if (!qspi_fram_quad_write_data(spi_ss, write_size, write_data, mem_addr)) {
-		assert();
-		return false;
-	}
+		debug("* [#1] Set to `Write Enable'\n");
+		if (!set_write_enable(spi_ss, true)) {
+			assert();
+			return false;
+		}
 
-	debug("* [#3] Set to `Write Disable'\n");
-	if (!set_write_enable(spi_ss, false)) {
-		assert();
-		return false;
+		debug("* [#2] Write Data (QUAD Mode)\n");
+		start_val = qspi_create_fifo_data(start_val, write_data, QSPI_FIFO_MAX_BYTE, false);
+		if (!qspi_fram_quad_write_data(spi_ss, QSPI_FIFO_MAX_BYTE, write_data, mem_addr)) {
+			assert();
+			return false;
+		}
+
+		debug("* [#3] Set to `Write Disable'\n");
+		if (!set_write_enable(spi_ss, false)) {
+			assert();
+			return false;
+		}
+		mem_addr += QSPI_FIFO_MAX_BYTE;
 	}
 
 	return true;
 }
 
-static bool qspi_fram_read_data(uint8_t mem_no, uint8_t read_size, uint32_t *exp_vals, uint32_t *mem_addr)
+bool qspi_fram_multi_read(uint8_t mem_no, uint32_t mem_addr, uint32_t size, uint8_t start_val)
 {
+	bool ret = true;
 	uint32_t spi_ss;
+	uint32_t exp_vals[QSPI_FIFO_MAX_BYTE];
+	uint16_t loop_count;
 
 	if (mem_no > 1) {
 		err("Invalid Mem number %d (expected 0 or 1)\n", mem_no);
@@ -483,19 +496,24 @@ static bool qspi_fram_read_data(uint8_t mem_no, uint8_t read_size, uint32_t *exp
 		spi_ss = QSPI_FRAM_MEM1_SS;
 	}
 
-	debug("* [#1] Set QUAD-IO Read Mode\n");
-	if (!qspi_fram_set_quad_read_mode(spi_ss)) {
-		assert();
-		return false;
+	loop_count = size/QSPI_FIFO_MAX_BYTE;
+	for (uint16_t i=0; i<loop_count; i++) {
+
+		debug("* [#1] Set QUAD-IO Read Mode\n");
+		if (!qspi_fram_set_quad_read_mode(spi_ss)) {
+			assert();
+			ret = false;
+		}
+
+		debug("* [#2] Read Data (QUAD-IO Mode) \n");
+		start_val = qspi_create_fifo_data(start_val, exp_vals, QSPI_FIFO_MAX_BYTE, false);
+		if (!qspi_fram_quad_read_data(spi_ss, QSPI_FIFO_MAX_BYTE, exp_vals, mem_addr)) {
+			ret = false;
+		}
+		mem_addr += QSPI_FIFO_MAX_BYTE;
 	}
 
-	debug("* [#2] Read Data (QUAD-IO Mode) \n");
-	if (!qspi_fram_quad_read_data(spi_ss, read_size, exp_vals, mem_addr)) {
-		assert();
-		return false;
-	}
-
-	return true;
+	return ret;
 }
 
 uint32_t qspi_fram_initialize(uint32_t test_no)
@@ -518,41 +536,41 @@ uint32_t qspi_fram_initialize(uint32_t test_no)
 uint32_t qspi_fram_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
-	uint32_t write_data_0[QSPI_RX_FIFO_MAX_BYTE] = {0x00};
-	uint32_t write_data_1[QSPI_RX_FIFO_MAX_BYTE] = {0x00};
-	uint32_t mem_addr_0[QSPI_FRAM_MEM_ADDR_SIZE] = {0x00, 0x00, 0x00};
-	uint32_t mem_addr_1[QSPI_FRAM_MEM_ADDR_SIZE] = {0x00, 0x10, 0x00};
-	uint8_t start_val_0 = 0x00;
-	uint8_t start_val_1 = 0x10;
+	uint32_t write_data_0[QSPI_FIFO_MAX_BYTE] = {0x00};
+	uint32_t write_data_1[QSPI_FIFO_MAX_BYTE] = {0x00};
+	uint32_t mem_addr_0 = 0x000000;
+	uint32_t mem_addr_1 = 0x001000;
+	uint8_t start_val_0 = 0x20;
+	uint8_t start_val_1 = 0x30;
 
 	info("* [%d] Start QSPI FRAM Test\n", test_no);
 
-	start_val_0 = qspi_create_fifo_data(start_val_0, write_data_0, ARRAY_SIZE(write_data_0), false);
-	start_val_1 = qspi_create_fifo_data(start_val_1, write_data_1, ARRAY_SIZE(write_data_1), false);
+	qspi_create_fifo_data(start_val_0, write_data_0, ARRAY_SIZE(write_data_0), false);
+	qspi_create_fifo_data(start_val_1, write_data_1, ARRAY_SIZE(write_data_1), false);
 
 	info("* [%d-1] Start QSPI FRAM [0]: Write data Test\n", test_no);
-	if (!qspi_fram_write_data(QSPI_FRAM_MEM0, QSPI_RX_FIFO_MAX_BYTE, write_data_0, mem_addr_0)) {
+	if (!qspi_fram_multi_write(QSPI_FRAM_MEM0, mem_addr_0, QSPI_FIFO_MAX_BYTE, start_val_0)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-2] Start QSPI FRAM [1]: Write data Test\n", test_no);
-	if (!qspi_fram_write_data(QSPI_FRAM_MEM1, QSPI_RX_FIFO_MAX_BYTE, write_data_1, mem_addr_1)) {
+	if (!qspi_fram_multi_write(QSPI_FRAM_MEM1, mem_addr_1, QSPI_FIFO_MAX_BYTE, start_val_1)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-3] Start QSPI FRAM [0]: Read data Test\n", test_no);
-	if (!qspi_fram_read_data(QSPI_FRAM_MEM0, QSPI_RX_FIFO_MAX_BYTE, write_data_0, mem_addr_0)) {
+	if (!qspi_fram_multi_read(QSPI_FRAM_MEM0, mem_addr_0, QSPI_FIFO_MAX_BYTE, start_val_0)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-4] Start QSPI FRAM [1]: Read data Test\n", test_no);
-	if (!qspi_fram_read_data(QSPI_FRAM_MEM1, QSPI_RX_FIFO_MAX_BYTE, write_data_1, mem_addr_1)) {
+	if (!qspi_fram_multi_read(QSPI_FRAM_MEM1, mem_addr_1, QSPI_FIFO_MAX_BYTE, start_val_1)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;

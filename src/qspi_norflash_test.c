@@ -9,10 +9,6 @@
 #include "common.h"
 
 #define QSPI_NOR_FLASH_MEM_ADDR_SIZE (3u)
-#define QSPI_DATA_MEM0 (0u)
-#define QSPI_DATA_MEM1 (1u)
-#define QSPI_CFG_MEM0  (0u)
-#define QSPI_CFG_MEM1  (1u)
 #define QSPI_DATA_MEM0_SS (0x01)
 #define QSPI_DATA_MEM1_SS (0x02)
 #define QSPI_ASR_IDLE (0x00)
@@ -20,14 +16,6 @@
 #define QSPI_RX_FIFO_MAX_BYTE (16u)
 #define QSPI_NOR_FLASH_DUMMY_CYCLE_COUNT (4u)
 #define QSPI_SPI_MODE_QUAD (0x00020000)
-#define QSPI_NOR_FLASH_SECTOR (4*1024)
-
-enum QspiEraseType
-{
-	QSPI_ERASE_SECTOR,		/* 4KB */
-	QSPI_ERASE_HALF_BLOCK,	/* 32KB */
-	QSPI_ERASE_BLOCK,		/* 64KB */
-};
 
 static uint32_t qspi_select_mem(uint32_t base, uint8_t mem_no)
 {
@@ -38,9 +26,11 @@ static uint32_t qspi_select_mem(uint32_t base, uint8_t mem_no)
 		if (mem_no == QSPI_DATA_MEM0) {
 			debug("* [#0] Select Config Memory 0\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00);
+			assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00, REG_READ_RETRY(10));
 		} else {
 			debug("* [#0] Select Config Memory 1\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x10);
+			assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x30, REG_READ_RETRY(10));
 		}
 		spi_ss = 0x01;
 	} else {
@@ -522,7 +512,8 @@ static bool qspi_memory_data_quad_write(uint32_t base, uint32_t spi_ss, uint32_t
 	return true;
 }
 
-static bool qspi_norflash_erase(uint32_t base, uint8_t mem_no, uint32_t mem_addr, bool is_wait_idle)
+bool qspi_norflash_erase(uint32_t base, uint8_t mem_no, enum QspiEraseType type,
+								uint32_t mem_addr, bool is_wait_idle)
 {
 	uint32_t spi_ss;
 	uint32_t exp_write_disable[] = {0x00, 0x00};
@@ -546,20 +537,34 @@ static bool qspi_norflash_erase(uint32_t base, uint8_t mem_no, uint32_t mem_addr
 		return false;
 	}
 
-	debug("* [#3] Sector (4KB) Erase\n");
-	if (!qspi_memory_data_erase(base, spi_ss, QSPI_ERASE_SECTOR, mem_addr)) {
+	debug("* [#3] Erase\n");
+	if (!qspi_memory_data_erase(base, spi_ss, type, mem_addr)) {
 		assert();
 		return false;
 	}
 
-	if (is_wait_idle) {
-		/* Wait 250 msec */
-		k_sleep(K_MSEC(250));
-		if (!verify_status_resisger1(base, spi_ss,
-								ARRAY_SIZE(exp_write_disable), exp_write_disable)) {
-			assert();
-			return false;
-		}
+	if (!is_wait_idle) {
+		return true;
+	}
+
+	switch (type) {
+	case QSPI_ERASE_SECTOR:
+		k_sleep(K_MSEC(300));
+		break;
+	case QSPI_ERASE_HALF_BLOCK:
+		k_sleep(K_MSEC(400));
+		break;
+	case QSPI_ERASE_BLOCK:
+		k_sleep(K_MSEC(800));
+		break;
+	default:
+		break;
+	}
+
+	if (!verify_status_resisger1(base, spi_ss,
+					ARRAY_SIZE(exp_write_disable), exp_write_disable)) {
+		assert();
+		return false;
 	}
 
 	return true;
@@ -591,7 +596,8 @@ bool qspi_norflash_read(uint32_t base, uint8_t mem_no, uint32_t mem_addr, uint8_
 	return true;
 }
 
-bool qspi_norflash_read_sector(uint32_t base, uint8_t mem_no, uint32_t mem_addr, uint8_t start_val, bool is_init)
+bool qspi_norflash_multi_read(uint32_t base, uint8_t mem_no, uint32_t mem_addr, uint32_t size,
+								uint8_t start_val, bool is_init)
 {
 	bool ret = true;
 	uint32_t spi_ss;
@@ -611,7 +617,7 @@ bool qspi_norflash_read_sector(uint32_t base, uint8_t mem_no, uint32_t mem_addr,
 		return false;
 	}
 
-	loop_count = QSPI_NOR_FLASH_SECTOR/QSPI_RX_FIFO_MAX_BYTE;
+	loop_count = size/QSPI_RX_FIFO_MAX_BYTE;
 	for (uint16_t i=0; i<loop_count; i++) {
 
 		debug("* [#2] Set QUAD-IO Read Mode\n");
@@ -678,7 +684,7 @@ bool qspi_norflash_write(uint32_t base, uint8_t mem_no, uint32_t mem_addr,
 	return true;
 }
 
-bool qspi_norflash_write_sector(uint32_t base, uint8_t mem_no, uint32_t mem_addr, uint8_t start_val)
+bool qspi_norflash_multi_write(uint32_t base, uint8_t mem_no, uint32_t mem_addr, uint32_t size, uint8_t start_val)
 {
 	uint32_t spi_ss;
 	uint32_t write_data[QSPI_RX_FIFO_MAX_BYTE];
@@ -698,7 +704,7 @@ bool qspi_norflash_write_sector(uint32_t base, uint8_t mem_no, uint32_t mem_addr
 		return false;
 	}
 
-	loop_count = QSPI_NOR_FLASH_SECTOR/QSPI_RX_FIFO_MAX_BYTE;
+	loop_count = size/QSPI_RX_FIFO_MAX_BYTE;
 	for (uint16_t i=0; i<loop_count; i++) {
 
 		debug("* [#2] Set to `Write Enable'\n");
@@ -786,14 +792,14 @@ static uint32_t qspi_norflash_test(uint32_t test_no, uint32_t base)
 	info("* [%d] Start QSPI Memory Test (only 16byte)\n", test_no);
 
 	info("* [%d-1] Start QSPI Memory [0]: Erase Test (Sector)\n", test_no);
-	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0,
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0, QSPI_ERASE_SECTOR,
 							mem_addr_0, is_wait_idle)) {
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-2] Start QSPI Memory [1]: Erase Test (Sector)\n", test_no);
-	if (!qspi_norflash_erase(base, QSPI_DATA_MEM1,
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM1, QSPI_ERASE_SECTOR,
 							mem_addr_1, is_wait_idle)) {
 		err_cnt++;
 		goto end_of_test;
@@ -867,14 +873,14 @@ static uint32_t qspi_norflash_sector_test(uint32_t test_no, uint32_t base)
 	bool is_wait_idle = true;
 
 	info("* [%d-1] Start QSPI Memory [0]: Erase Test (Sector)\n", test_no);
-	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0, mem_addr_0, is_wait_idle)) {
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0, QSPI_ERASE_SECTOR, mem_addr_0, is_wait_idle)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-2] Start QSPI Memory [1]: Erase Test (Sector)\n", test_no);
-	if (!qspi_norflash_erase(base, QSPI_DATA_MEM1, mem_addr_1, is_wait_idle)) {
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM1, QSPI_ERASE_SECTOR, mem_addr_1, is_wait_idle)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
@@ -882,7 +888,8 @@ static uint32_t qspi_norflash_sector_test(uint32_t test_no, uint32_t base)
 
 	info("* [%d-3] Start QSPI Memory [0]: Read initial data Test (Sector:4KB)\n", test_no);
 	is_wait_idle = true;
-	if (!qspi_norflash_read_sector(base, QSPI_DATA_MEM0, mem_addr_0, start_val_0, true)) {
+	if (!qspi_norflash_multi_read(base, QSPI_DATA_MEM0, mem_addr_0,
+								QSPI_NOR_FLASH_SECTOR_BYTE, start_val_0, true)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
@@ -890,38 +897,128 @@ static uint32_t qspi_norflash_sector_test(uint32_t test_no, uint32_t base)
 
 	info("* [%d-4] Start QSPI Memory [1]: Read initial data Test (Sector:4KB)\n", test_no);
 	is_wait_idle = true;
-	if (!qspi_norflash_read_sector(base, QSPI_DATA_MEM1, mem_addr_1, start_val_1, true)) {
+	if (!qspi_norflash_multi_read(base, QSPI_DATA_MEM1, mem_addr_1,
+								QSPI_NOR_FLASH_SECTOR_BYTE, start_val_1, true)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-5] Start QSPI Memory [0]: Write data Test (Sector:4KB)\n", test_no);
-	if (!qspi_norflash_write_sector(base, QSPI_DATA_MEM0, mem_addr_0, start_val_0)) {
+	if (!qspi_norflash_multi_write(base, QSPI_DATA_MEM0, mem_addr_0,
+									QSPI_NOR_FLASH_SECTOR_BYTE, start_val_0)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-6] Start QSPI Memory [1]: Write data Test (Sector:4KB)\n", test_no);
-	if (!qspi_norflash_write_sector(base, QSPI_DATA_MEM1, mem_addr_1, start_val_1)) {
+	if (!qspi_norflash_multi_write(base, QSPI_DATA_MEM1, mem_addr_1,
+									QSPI_NOR_FLASH_SECTOR_BYTE, start_val_1)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-7] Start QSPI Memory [0]: Read data Test (Sector:4KB)\n", test_no);
-	if (!qspi_norflash_read_sector(base, QSPI_DATA_MEM0, mem_addr_0, start_val_0, false)) {
+	if (!qspi_norflash_multi_read(base, QSPI_DATA_MEM0, mem_addr_0,
+								QSPI_NOR_FLASH_SECTOR_BYTE, start_val_0, false)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
 	}
 
 	info("* [%d-8] Start QSPI Memory [1]: Read data Test (Sector:4KB)\n", test_no);
-	if (!qspi_norflash_read_sector(base, QSPI_DATA_MEM1, mem_addr_1, start_val_1, false)) {
+	if (!qspi_norflash_multi_read(base, QSPI_DATA_MEM1, mem_addr_1,
+								QSPI_NOR_FLASH_SECTOR_BYTE, start_val_1, false)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
+	}
+
+end_of_test:
+	return err_cnt;
+}
+
+/*
+ *   1. Erase Memory 0 (Sector)
+ *   2. Erase Memory 1 (Sector)
+ *   3. Read Memory 0  (all 0xFF)
+ *   4. Read Memory 1  (all 0xFF)
+ *   5. Write Memory 0 (Block:64KB)
+ *   6. Write Memory 1 (Block:64KB)
+ *   7. Read Memory 0
+ *   8. Read Memory 1
+ */
+static uint32_t qspi_norflash_block_test(uint32_t test_no, uint32_t base)
+{
+	uint32_t err_cnt = 0;
+	uint32_t mem_addr_0 = 0x00A00000;
+	uint32_t mem_addr_1 = 0x00B00000;
+	uint8_t start_val_0 = 0x60;
+	uint8_t start_val_1 = 0x70;
+	bool is_wait_idle = true;
+
+	info("* [%d-1] Start QSPI Memory [0]: Erase Test (Block)\n", test_no);
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0, QSPI_ERASE_BLOCK, mem_addr_0, is_wait_idle)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-2] Start QSPI Memory [1]: Erase Test (Block)\n", test_no);
+	if (!qspi_norflash_erase(base, QSPI_DATA_MEM1, QSPI_ERASE_BLOCK, mem_addr_1, is_wait_idle)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-3] Start QSPI Memory [0]: Read initial data Test (Block:64KB)\n", test_no);
+	is_wait_idle = true;
+	if (!qspi_norflash_multi_read(base, QSPI_DATA_MEM0, mem_addr_0,
+								QSPI_NOR_FLASH_BLOCK_BYTE, start_val_0, true)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-4] Start QSPI Memory [1]: Read initial data Test (Block:64KB)\n", test_no);
+	is_wait_idle = true;
+	if (!qspi_norflash_multi_read(base, QSPI_DATA_MEM1, mem_addr_1,
+								QSPI_NOR_FLASH_BLOCK_BYTE, start_val_1, true)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-5] Start QSPI Memory [0]: Write data Test (Block:64KB)\n", test_no);
+	if (!qspi_norflash_multi_write(base, QSPI_DATA_MEM0, mem_addr_0,
+								QSPI_NOR_FLASH_BLOCK_BYTE, start_val_0)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-6] Start QSPI Memory [1]: Write data Test (Block:64KB)\n", test_no);
+	if (!qspi_norflash_multi_write(base, QSPI_DATA_MEM1, mem_addr_1,
+								QSPI_NOR_FLASH_BLOCK_BYTE, start_val_1)) {
+		assert();
+		err_cnt++;
+		goto end_of_test;
+	}
+
+	info("* [%d-7] Start QSPI Memory [0]: Read data Test (Block:64KB)\n", test_no);
+	if (!qspi_norflash_multi_read(base, QSPI_DATA_MEM0, mem_addr_0,
+								QSPI_NOR_FLASH_BLOCK_BYTE, start_val_0, false)) {
+		assert();
+		err_cnt++;
+	}
+
+	info("* [%d-8] Start QSPI Memory [1]: Read data Test (Block:64KB)\n", test_no);
+	if (!qspi_norflash_multi_read(base, QSPI_DATA_MEM1, mem_addr_1,
+								QSPI_NOR_FLASH_BLOCK_BYTE, start_val_1, false)) {
+		assert();
+		err_cnt++;
 	}
 
 end_of_test:
@@ -978,6 +1075,34 @@ uint32_t qspi_data_memory_sector_test(uint32_t test_no)
 	info("* [%d] Start QSPI Data Memory Test (Sector)\n", test_no);
 
 	err_cnt = qspi_norflash_sector_test(test_no, base);
+
+	print_result(test_no, err_cnt);
+
+	return err_cnt;
+}
+
+uint32_t qspi_config_memory_block_test(uint32_t test_no)
+{
+	uint32_t err_cnt = 0;
+	uint32_t base = SCOBCA1_FPGA_CFG_BASE_ADDR;
+
+	info("* [%d] Start QSPI Config Memory Test (Block)\n", test_no);
+
+	err_cnt = qspi_norflash_block_test(test_no, base);
+
+	print_result(test_no, err_cnt);
+
+	return err_cnt;
+}
+
+uint32_t qspi_data_memory_block_test(uint32_t test_no)
+{
+	uint32_t err_cnt = 0;
+	uint32_t base = SCOBCA1_FPGA_DATA_BASE_ADDR;
+
+	info("* [%d] Start QSPI Data Memory Test (Block)\n", test_no);
+
+	err_cnt = qspi_norflash_block_test(test_no, base);
 
 	print_result(test_no, err_cnt);
 

@@ -9,8 +9,8 @@
 
 #include <zephyr/kernel.h>
 
-#define SCOBCA1_TEMP_LIMIT_UPPER (50)
-#define SCOBCA1_TEMP_LIMIT_LOWER (-10)
+#define SCOBCA1_TEMP_LIMIT_UPPER (110)
+#define SCOBCA1_TEMP_LIMIT_LOWER (-40)
 
 bool bhm_enable(void);
 uint32_t bhm_read_sensor_data(void);
