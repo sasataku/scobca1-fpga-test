@@ -8,6 +8,7 @@
 #define SCOBCA1_FPGA_TEST_QSPI_NORFLASH_TEST_H_
 
 #include <zephyr/kernel.h>
+#include "qspi_common.h"
 
 uint32_t qspi_norflash_initialize(uint32_t test_no);
 uint32_t qspi_config_memory_test(uint32_t test_no);
