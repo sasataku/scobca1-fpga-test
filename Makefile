@@ -18,7 +18,7 @@ HEXDIR := hex
 PRGDAT := $(HEXDIR)/$(MODULE)
 
 # Source and object files
-SRCS := src/main.c src/fpga.c src/interrupt.c src/timer.c src/usart.c src/tmp175.c src/i2c-gpio.c
+SRCS := src/main.c src/fpga.c src/interrupt.c src/timer.c src/usart.c src/tmp175.c src/i2c-gpio.c src/spi.c
 SRCS += src/test.c
 OBJS := $(SRCS:.c=.p1)
 
