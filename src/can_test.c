@@ -20,6 +20,9 @@
 #define CAN_TXERTR_DATA   (0u)
 #define CAN_TXERTR_REMOTE (1u)
 
+bool can_tx_done = false;
+bool can_rx_done = false;
+
 static uint32_t get_idr(uint16_t can_id, uint32_t can_ext_id)
 {
 	return (can_id << CAN_TXID1_BIT_SHIFT) +
@@ -41,6 +44,32 @@ static void convert_can_data_to_word(uint8_t *can_data, uint8_t size, uint32_t *
 			*word2 += can_data[i] << (3*8-(i-4)*8);
 		}
 	}
+}
+
+static bool is_can_tx_done(void)
+{
+	for (uint8_t i=0; i<10; i++) {
+		if (can_tx_done) {
+			can_tx_done = false;
+			return true;
+		}
+		k_usleep(10);
+	}
+
+	return false;
+}
+
+static bool is_can_rx_done(void)
+{
+	for (uint8_t i=0; i<10; i++) {
+		if (can_rx_done) {
+			can_rx_done = false;
+			return true;
+		}
+		k_usleep(10);
+	}
+
+	return false;
 }
 
 static bool can_loopback_test_init(void)
@@ -111,18 +140,8 @@ static bool can_send_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *can_dat
 	write32(SCOBCA1_FPGA_CAN_TMR3, data_word1);
 	write32(SCOBCA1_FPGA_CAN_TMR4, data_word2);
 
-	k_usleep(10);
-
-	debug("* Verify CAN Interrupt Registe (CAN_TRNSDN/CAN_RCVDN/CAN_RXFVAL)\n");
-	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x31, REG_READ_RETRY(10))) {
-		assert();
-		return false;
-	}
-
-	debug("* Clear CAN Interrupt Register and Verify\n");
-	write32(SCOBCA1_FPGA_CAN_ISR, 0x31);
-	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, REG_READ_RETRY(10))) {
-		assert();
+	if (!is_can_tx_done()) {
+		err("  !!! Assertion failed: CAN TX DONE timed out\n");
 		return false;
 	}
 
@@ -135,6 +154,11 @@ static bool can_recv_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *exp_can
 
 	uint32_t data_word1;
 	uint32_t data_word2;
+
+	if (!is_can_rx_done()) {
+		err("  !!! Assertion failed: CAN RX DONE timed out\n");
+		return false;
+	}
 
 	debug("* Read CAN ID and Verify\n");
 	if (!assert32(SCOBCA1_FPGA_CAN_RMR1, get_idr(can_id, can_ext_id), REG_READ_RETRY(1))) {

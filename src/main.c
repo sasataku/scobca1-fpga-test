@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "common.h"
+#include "irq.h"
 #include "watchdog.h"
 #include "i2c_test.h"
 #include "hrmem_test.h"
@@ -91,6 +92,7 @@ void main(void)
 	uint32_t test_no;
 
 	start_kick_wdt_thread();
+	irq_init();
 	console_getline_init();
 
 	info("This is the FPGA test program for SC-OBC-A1\n");
