@@ -83,5 +83,6 @@
 
 uint32_t can_loopback(void);
 uint32_t can_test(uint32_t test_no);
+uint32_t can_send_cmd(uint32_t test_no);
 
 #endif /* SCOBCA1_FPGA_TEST_CAN_TESET_H_ */

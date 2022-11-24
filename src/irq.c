@@ -22,6 +22,7 @@
 extern bool can_tx_done;
 extern bool can_rx_done;
 extern bool qspi_norflash_done;
+extern bool first_can_err_isr;
 
 enum ScObcA1IrqNo {
 	IRQ_NO_UART = 0,
@@ -89,7 +90,10 @@ void can_irq_cb(void *arg)
 	}
 	/* Check error bit */
 	if ((isr & CAN_ISR_ERR_MASK) != 0) {
-		err("  !!! Assertion failed: Invalid CAN ISR: 0x%08x\n", isr);
+		if (!first_can_err_isr) {
+			err("  !!! Assertion failed: Invalid CAN ISR: 0x%08x\n", isr);
+			first_can_err_isr = true;
+		}
 	}
 }
 

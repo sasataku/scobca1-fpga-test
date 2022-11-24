@@ -43,6 +43,7 @@ enum ScTestNo {
 	SC_TEST_QSPI_DATA_MEM_BLOCK,
 	SC_TEST_QSPI_FRAM,
 	SC_TEST_CAN,
+	SC_TEST_CAN_SEND_CMD,
 	SC_TEST_BOARD_HEALTH_MONITOR,
 	SC_TEST_CRACK_PUDC,
 	SC_TEST_CRACK_USER_IO,
@@ -71,6 +72,7 @@ void print_menu(void)
 	info("[%d] QSPI Data Memory Test (Block)\n", SC_TEST_QSPI_DATA_MEM_BLOCK);
 	info("[%d] QSPI FRAM Test\n", SC_TEST_QSPI_FRAM);
 	info("[%d] CAN Test\n", SC_TEST_CAN);
+	info("[%d] CAN send command to TRCH\n", SC_TEST_CAN_SEND_CMD);
 	info("[%d] Board Health Monitor Test\n", SC_TEST_BOARD_HEALTH_MONITOR);
 
 	/* for crack and bridge testing */
@@ -152,6 +154,9 @@ void main(void)
 			break;
 		case SC_TEST_CAN:
 			can_test(test_no);
+			break;
+		case SC_TEST_CAN_SEND_CMD:
+			can_send_cmd(test_no);
 			break;
 		case SC_TEST_BOARD_HEALTH_MONITOR:
 			bhm_test(test_no);
