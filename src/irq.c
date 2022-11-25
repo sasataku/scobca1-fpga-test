@@ -9,7 +9,7 @@
 #include "common.h"
 #include "hrmem_test.h"
 #include "qspi_common.h"
-#include "can_test.h"
+#include "can.h"
 #include "system_monitor_reg.h"
 
 #define IRQ_PRIO (2u)
@@ -24,9 +24,6 @@
 
 uint32_t irq_err_cnt = 0;
 
-extern bool can_tx_done;
-extern bool can_rx_done;
-extern bool first_can_err_isr;
 extern bool i2c_initalized;
 
 enum ScObcA1IrqNo {
