@@ -3,6 +3,20 @@ mainmenu "SC OBC Quality Quality Inspection"
 config NUM_IRQS
 	default 10
 
+config AUTO_RUN
+	bool "Run specified test after boot"
+	default n
+	help
+	  With this option, Zephyr will run specified test repeatedly
+	  after boot.
+
+config AUTO_RUN_TEST_NUMBER
+	int "Specify a test number for auto run"
+	default 1
+	depends on AUTO_RUN
+	help
+	  Specify a test number to run.
+
 menu "Zephyr"
 
 source "Kconfig.zephyr"

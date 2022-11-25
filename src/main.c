@@ -92,6 +92,12 @@ void print_menu(void)
 	info("[%d] Shared Pin Test\n", SC_TEST_TRCH);
 }
 
+#ifndef CONFIG_AUTO_RUN_TEST_NUMBER
+#define AUTO_RUN_TEST_NUMBER (-1)
+#else
+#define AUTO_RUN_TEST_NUMBER (CONFIG_AUTO_RUN_TEST_NUMBER)
+#endif
+
 void main(void)
 {
 	char *s;
@@ -113,18 +119,24 @@ void main(void)
 
 	while (true) {
 
-		info("> ");
+		if (IS_ENABLED(CONFIG_AUTO_RUN)) {
+			test_no = AUTO_RUN_TEST_NUMBER;
+		}
+		else {
+			info("> ");
 
-		s = console_getline();
-		if (strcmp(s, "h") == 0) {
-			print_menu();
-			continue;
-		} else if (strcmp(s, "q") == 0) {
-			is_exit = true;
-			continue;
+			s = console_getline();
+			if (strcmp(s, "h") == 0) {
+				print_menu();
+				continue;
+			} else if (strcmp(s, "q") == 0) {
+				is_exit = true;
+				continue;
+			}
+
+			test_no = strtol(s, NULL, 10);
 		}
 
-		test_no = strtol(s, NULL, 10);
 		switch (test_no) {
 		case SC_TEST_QSPI_INIT:
 			qspi_init(test_no);
