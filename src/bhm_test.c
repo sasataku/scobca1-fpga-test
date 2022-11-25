@@ -186,14 +186,14 @@ bool bhm_enable(void)
 	debug("* [#6] Set monitoring timing\n");
 	/*
 		I2C access timing
-		Current Voltage: 0.1 ms
-		Temperature      : 1.7 ms
+		Current Voltage  : 0.1 ms
+		Temperature      : 6.4 ms
 	*/
 	write32(SCOBCA1_FPGA_GPTMR_HITCR, 0x00280000);
 	write32(SCOBCA1_FPGA_GPTMR_HITPR, 0x095F);
-	write32(SCOBCA1_FPGA_GPTMR_HITOCR1, 0x0014);
+	write32(SCOBCA1_FPGA_GPTMR_HITOCR1, 0x0050);
 	write32(SCOBCA1_FPGA_GPTMR_HITOCR2, 0x0001);
-	write32(SCOBCA1_FPGA_GPTMR_HITOCR3, 0x0011);
+	write32(SCOBCA1_FPGA_GPTMR_HITOCR3, 0x0040);
 
 	debug("* [#7] Enable all sensor device monitoring\n");
 	write32(SCOBCA1_FPGA_SYSMON_BHM_MONCTLR, 0x1F);
