@@ -17,8 +17,6 @@
 #define QSPI_NOR_FLASH_DUMMY_CYCLE_COUNT (4u)
 #define QSPI_SPI_MODE_QUAD (0x00020000)
 
-bool qspi_norflash_done = false;
-
 static uint32_t qspi_select_mem(uint32_t base, uint8_t mem_no)
 {
 	uint32_t spi_ss;
@@ -143,16 +141,19 @@ static bool read_and_verify_rx_data(uint32_t base, size_t exp_size, uint32_t *ex
 static bool is_qspi_control_done(uint32_t base)
 {
 	debug("* Confirm QSPI Interrupt Stauts is `SPI Control Done`\n");
-	for (uint8_t i=0; i<10; i++) {
-		if (qspi_norflash_done) {
-			qspi_norflash_done = false;
-			return true;
-		}
-		k_usleep(10);
+	if (!assert32(SCOBCA1_FPGA_NORFLASH_QSPI_ISR(base), 0x01, REG_READ_RETRY(10))) {
+		assert();
+		return false;
 	}
 
-	err("  !!! Assertion failed: QSPI SPI DONE timed out\n");
-	return false;
+	debug("* Clear QSPI Interrupt Stauts\n");
+	write32(SCOBCA1_FPGA_NORFLASH_QSPI_ISR(base), 0x01);
+	if (!assert32(SCOBCA1_FPGA_NORFLASH_QSPI_ISR(base), 0x00, REG_READ_RETRY(10))) {
+		assert();
+		return false;
+	}
+
+	return true;
 }
 
 static bool verify_status_resisger1(uint32_t base, uint32_t spi_ss, size_t exp_size, uint32_t *exp_val)

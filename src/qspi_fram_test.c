@@ -18,8 +18,6 @@
 #define QSPI_NOR_FLASH_DUMMY_CYCLE_COUNT (2u)
 #define QSPI_SPI_MODE_QUAD   (0x00020000)
 
-bool qspi_fram_done = false;
-
 static bool is_qspi_idle(void)
 {
 	debug("* Confirm QSPI Access Status is `Idle`\n");
@@ -116,16 +114,17 @@ static bool read_and_verify_rx_data(size_t exp_size, uint32_t *exp_val)
 static bool is_qspi_control_done(void)
 {
 	debug("* Confirm QSPI Interrupt Stauts is `SPI Control Done`\n");
-	for (uint8_t i=0; i<10; i++) {
-		if (qspi_fram_done) {
-			qspi_fram_done = false;
-			return true;
-		}
-		k_usleep(10);
+	if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_ISR, 0x01, REG_READ_RETRY(10))) {
+		return false;
 	}
 
-	err("  !!! Assertion failed: QSPI (FRAM) SPI DONE timed out\n");
-	return false;
+	debug("* Clear QSPI Interrupt Stauts\n");
+	write32(SCOBCA1_FPGA_FRAM_QSPI_ISR, 0x01);
+	if (!assert32(SCOBCA1_FPGA_FRAM_QSPI_ISR, 0x00, REG_READ_RETRY(10))) {
+		return false;
+	}
+
+	return true;
 }
 
 static bool verify_status_resisger1(uint32_t spi_ss, size_t exp_size, uint32_t *exp_val)
