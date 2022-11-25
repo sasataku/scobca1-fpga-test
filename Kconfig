@@ -1,0 +1,10 @@
+mainmenu "SC OBC Quality Quality Inspection"
+
+config NUM_IRQS
+	default 10
+
+menu "Zephyr"
+
+source "Kconfig.zephyr"
+
+endmenu
