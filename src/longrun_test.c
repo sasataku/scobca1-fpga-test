@@ -42,6 +42,7 @@ static uint32_t fram_mem_addr_0 = 0x000000;
 static int32_t fram_mem_addr_1 = 0x001000;
 
 extern bool is_exit;
+extern uint32_t irq_err_cnt;
 
 enum NorflashState
 {
@@ -339,8 +340,8 @@ static void start_longrun_test(void *p1, void *p2, void *p3)
 			err_cnt += data_memory_read();
 		}
 
-		info("* Loop [%d][uptime:%d][erase:%d] Total assertion: %d\n",
-					loop_count, get_obc_uptime(), erase_count, err_cnt);
+		info("* Loop [%d][uptime:%d][erase:%d] Total assertion: %d, IRQ assertion: %d\n",
+					loop_count, get_obc_uptime(), erase_count, err_cnt, irq_err_cnt);
 
 		if (is_exit) {
 			printk("* Stop Long Run Test\n");

@@ -23,6 +23,8 @@
 #define QSPI_ISR_ERR_MASK     (0x07070000)
 #define SYSMON_IER_ALL        (0x00073f03)
 
+uint32_t irq_err_cnt = 0;
+
 extern bool can_tx_done;
 extern bool can_rx_done;
 extern bool qspi_norflash_done;
@@ -48,6 +50,7 @@ void hrmem_irq_cb(void *arg)
 	/* HRMEM ISR is all error bit */
 	err("  !!! Assertion failed: Invalid HRMEM ISR: 0x%08x\n", isr);
 	write32(SCOBCA1_FPGA_HRMEM_INTSTR, isr);
+	irq_err_cnt++;
 }
 
 void qspi_cfg_irq_cb(void *arg)
@@ -64,6 +67,7 @@ void qspi_cfg_irq_cb(void *arg)
 	}
 	/* Check error bit */
 	if ((isr & QSPI_ISR_ERR_MASK) != 0) {
+		irq_err_cnt++;
 		err("  !!! Assertion failed: Invalid QSPI NOR Flash (Config) ISR: 0x%08x\n", isr);
 	}
 }
@@ -82,6 +86,7 @@ void qspi_data_irq_cb(void *arg)
 	}
 	/* Check error bit */
 	if ((isr & QSPI_ISR_ERR_MASK) != 0) {
+		irq_err_cnt++;
 		err("  !!! Assertion failed: Invalid QSPI NOR Flash (Data) ISR: 0x%08x\n", isr);
 	}
 }
@@ -99,6 +104,7 @@ void qspi_fram_irq_cb(void *arg)
 	}
 	/* Check error bit */
 	if ((isr & QSPI_ISR_ERR_MASK) != 0) {
+		irq_err_cnt++;
 		err("  !!! Assertion failed: Invalid QSPI NOR Flash (FRAM) ISR: 0x%08x\n", isr);
 	}
 }
@@ -120,6 +126,7 @@ void can_irq_cb(void *arg)
 	}
 	/* Check error bit */
 	if ((isr & CAN_ISR_ERR_MASK) != 0) {
+		irq_err_cnt++;
 		if (!first_can_err_isr) {
 			err("  !!! Assertion failed: Invalid CAN ISR: 0x%08x\n", isr);
 			first_can_err_isr = true;
@@ -134,6 +141,7 @@ void sysmon_irq_cb(void *arg)
 	/* System Monitor ISR is all error bit */
 	err("  !!! Assertion failed: Invalid System Monitor ISR: 0x%08x\n", isr);
 	write32(SCOBCA1_FPGA_SYSMON_BHM_ISR, isr);
+	irq_err_cnt++;
 }
 
 void irq_init(void) {

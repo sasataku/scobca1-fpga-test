@@ -146,6 +146,7 @@ static bool can_send_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *can_dat
 	uint32_t data_word2;
 
 	debug("* Send CAN ID\n");
+	first_can_err_isr = false;
 	write32(SCOBCA1_FPGA_CAN_TMR1, get_idr(can_id, can_ext_id, extend));
 
 	debug("* Send CAN Packet size\n");
