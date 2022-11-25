@@ -106,3 +106,8 @@ bool can_send_full(uint16_t can_id, uint32_t can_ext_id, uint8_t *can_data, uint
 bool is_can_rx_done(int32_t timeout_us);
 bool is_can_tx_done(void);
 void can_convert_can_data_to_word(uint8_t *can_data, uint8_t size, uint32_t *word1, uint32_t *word2);
+
+static inline bool can_send(uint16_t can_id, uint8_t *can_data, uint8_t size)
+{
+	return can_send_full(can_id, 0, can_data, size, false);
+}
