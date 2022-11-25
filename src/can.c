@@ -142,7 +142,7 @@ bool can_terminate(bool test_mode)
 	return true;
 }
 
-bool can_send_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *can_data, uint8_t size, bool extend)
+bool can_send_full(uint16_t can_id, uint32_t can_ext_id, uint8_t *can_data, uint8_t size, bool extend)
 {
 	uint32_t data_word1;
 	uint32_t data_word2;

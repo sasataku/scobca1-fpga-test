@@ -71,7 +71,7 @@ static bool can_send_cmd_to_trch(uint8_t cmd_code)
 	first_can_err_isr = false;
 	info("* Send CAN Data (ID: 0x%02x) Data: 0x%02x 0x%02x\n",
 			can_id, can_data[0], can_data[1]);
-	if (!can_send_test(can_id, can_ext_id, can_data, ARRAY_SIZE(can_data), extend)) {
+	if (!can_send_full(can_id, can_ext_id, can_data, ARRAY_SIZE(can_data), extend)) {
 		assert();
 		return false;
 	}
@@ -131,7 +131,7 @@ uint32_t can_loopback(void)
 	}
 
 	debug("* [#2] Start CAN Send Test\n");
-	if (!can_send_test(can_id, can_ext_id, can_data, CAN_PKT_SIZE, extend)) {
+	if (!can_send_full(can_id, can_ext_id, can_data, CAN_PKT_SIZE, extend)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
