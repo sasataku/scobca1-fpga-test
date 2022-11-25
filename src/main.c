@@ -30,6 +30,7 @@
 #include "bhm_test.h"
 #include "system_reg.h"
 #include "longrun_test.h"
+#include "trch_test.h"
 
 enum ScTestNo {
 	SC_TEST_QSPI_INIT = 1,
@@ -55,6 +56,7 @@ enum ScTestNo {
 	SC_TEST_CRACK_SRAM_ERR,
 	SC_TEST_CRACK_SRAM_DATA,
 	SC_TEST_BRIDGE,
+	SC_TEST_TRCH,
 };
 
 bool is_exit;
@@ -86,6 +88,8 @@ void print_menu(void)
 	info("[%d] SRAM err crack Test\n", SC_TEST_CRACK_SRAM_ERR);
 	info("[%d] SRAM data crack Test\n", SC_TEST_CRACK_SRAM_DATA);
 	info("[%d] Bridge Test\n", SC_TEST_BRIDGE);
+
+	info("[%d] Shared Pin Test\n", SC_TEST_TRCH);
 }
 
 void main(void)
@@ -190,6 +194,9 @@ void main(void)
 			break;
 		case SC_TEST_CRACK_SRAM_DATA:
 			sram_data_crack_test(test_no);
+			break;
+		case SC_TEST_TRCH:
+			trch_test();
 			break;
 		default:
 			break;
