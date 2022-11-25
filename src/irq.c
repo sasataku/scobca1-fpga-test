@@ -17,11 +17,12 @@
 #define CAN_ISR_TXDONE_MASK   (0x00000001)
 #define CAN_ISR_RXDONE_MASK   (0x00000030)
 #define CAN_ISR_ERR_MASK      (0x00003FCE)
-#define CAN_IER_ALL           (0x00003fff)
+#define CAN_IER_ALL           (0x00003FFF)
 #define QSPI_IER_ALL          (0x07070001)
 #define QSPI_ISR_SPIDONE_MASK (0x00000001)
 #define QSPI_ISR_ERR_MASK     (0x07070000)
-#define SYSMON_IER_ALL        (0x00073f03)
+#define SYSMON_HW_IER_ALL     (0x00000F9F)
+#define SYSMON_BHM_IER_ALL    (0x00073F03)
 
 uint32_t irq_err_cnt = 0;
 
@@ -40,7 +41,8 @@ enum ScObcA1IrqNo {
 	IRQ_NO_CAN,
 	IRQ_NO_INTERNAL_I2C,
 	IRQ_NO_EXTERNAL_I2C,
-	IRQ_NO_SYSMON,
+	IRQ_NO_SYSMON_HW,
+	IRQ_NO_SYSMON_BHM,
 };
 
 void hrmem_irq_cb(void *arg)
@@ -134,12 +136,22 @@ void can_irq_cb(void *arg)
 	}
 }
 
-void sysmon_irq_cb(void *arg)
+void sysmon_hw_irq_cb(void *arg)
+{
+	uint32_t isr = sys_read32(SCOBCA1_FPGA_SYSMON_INT_STATUS);
+
+	/* System Monitor (HW) ISR is all error bit */
+	err("  !!! Assertion failed: Invalid System Monitor (HW) ISR: 0x%08x\n", isr);
+	write32(SCOBCA1_FPGA_SYSMON_INT_STATUS, isr);
+	irq_err_cnt++;
+}
+
+void sysmon_bhm_irq_cb(void *arg)
 {
 	uint32_t isr = sys_read32(SCOBCA1_FPGA_SYSMON_BHM_ISR);
 
-	/* System Monitor ISR is all error bit */
-	err("  !!! Assertion failed: Invalid System Monitor ISR: 0x%08x\n", isr);
+	/* System Monitor (BHM) ISR is all error bit */
+	err("  !!! Assertion failed: Invalid System Monitor (BHM) ISR: 0x%08x\n", isr);
 	write32(SCOBCA1_FPGA_SYSMON_BHM_ISR, isr);
 	irq_err_cnt++;
 }
@@ -161,8 +173,11 @@ void irq_init(void) {
 	IRQ_CONNECT(IRQ_NO_CAN, IRQ_PRIO, can_irq_cb, NULL, 0);
 	irq_enable(IRQ_NO_CAN);
 
-	IRQ_CONNECT(IRQ_NO_SYSMON, IRQ_PRIO, sysmon_irq_cb, NULL, 0);
-	irq_enable(IRQ_NO_SYSMON);
+	IRQ_CONNECT(IRQ_NO_SYSMON_HW, IRQ_PRIO, sysmon_hw_irq_cb, NULL, 0);
+	irq_enable(IRQ_NO_SYSMON_HW);
+
+	IRQ_CONNECT(IRQ_NO_SYSMON_BHM, IRQ_PRIO, sysmon_bhm_irq_cb, NULL, 0);
+	irq_enable(IRQ_NO_SYSMON_BHM);
 
 	/* Enable IER Ragister */
 	write32(SCOBCA1_FPGA_HRMEM_INTENR, HRMEM_IER_ALL);
@@ -170,7 +185,8 @@ void irq_init(void) {
 	write32(SCOBCA1_FPGA_NORFLASH_QSPI_IER(SCOBCA1_FPGA_DATA_BASE_ADDR), QSPI_IER_ALL);
 	write32(SCOBCA1_FPGA_FRAM_QSPI_IER, QSPI_IER_ALL);
 	write32(SCOBCA1_FPGA_CAN_IER, CAN_IER_ALL);
-	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, SYSMON_IER_ALL);
+	write32(SCOBCA1_FPGA_SYSMON_INT_ENABLE, SYSMON_HW_IER_ALL);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, SYSMON_BHM_IER_ALL);
 
 	/* Enable HRMEM Scrubing */
 	write32(SCOBCA1_FPGA_HRMEM_ECCCOLENR, 0x01);

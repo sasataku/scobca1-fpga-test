@@ -11,6 +11,13 @@
 
 #define SCOBCA1_FPGA_SYSMON_WDOG_CTRL        (0x4F040000) /* Watchdog Control Register */
 #define SCOBCA1_FPGA_SYSMON_WDOG_SIVAL       (0x4F040010) /* Watchdog Signal Interval Register */
+#define SCOBCA1_FPGA_SYSMON_INT_STATUS       (0x4F040030) /* System Monitor Interrupt Status Register */
+#define SCOBCA1_FPGA_SYSMON_INT_ENABLE       (0x4F040034) /* System Monitor Interrupt Enable Register */
+#define SCOBCA1_FPGA_SYSMON_SEM_STATE        (0x4F040040) /* SEM Controller State Register */
+#define SCOBCA1_FPGA_SYSMON_SEM_ECCOUNT      (0x4F040044) /* SEM Error Correction Count Register */
+#define SCOBCA1_FPGA_SYSMON_SEM_HTIMEOUT     (0x4F040048) /* SEM Heartbeat Timeout Register */
+#define SCOBCA1_FPGA_SYSMON_SEM_EINJECT1     (0x4F040050) /* SEM Error Injection Command Register */
+#define SCOBCA1_FPGA_SYSMON_SEM_EINJECT2     (0x4F040054) /* SEM Error Injection Command Register */
 #define SCOBCA1_FPGA_SYSMON_XADC_TEMP        (0x4F041000) /* XADC Tempature */
 #define SCOBCA1_FPGA_SYSMON_XADC_VCCINT      (0x4F041010) /* XADC VCCINT 1.0V */
 #define SCOBCA1_FPGA_SYSMON_XADC_VCCAUX      (0x4F041020) /* XADC VCCAUX 1.8V */
