@@ -13,16 +13,17 @@
 #include "system_monitor_reg.h"
 
 #define IRQ_PRIO (2u)
-#define HRMEM_IER_ALL         (0x00000103)
-#define CAN_ISR_TXDONE_MASK   (0x00000001)
-#define CAN_ISR_RXDONE_MASK   (0x00000030)
-#define CAN_ISR_ERR_MASK      (0x00003FCE)
-#define CAN_IER_ALL           (0x00003FFF)
-#define QSPI_IER_ALL          (0x07070001)
-#define QSPI_ISR_SPIDONE_MASK (0x00000001)
-#define QSPI_ISR_ERR_MASK     (0x07070000)
-#define SYSMON_HW_IER_ALL     (0x00000F9F)
-#define SYSMON_BHM_IER_ALL    (0x00073F03)
+#define HRMEM_IER_ALL            (0x00000103)
+#define CAN_ISR_TXDONE_MASK      (0x00000001)
+#define CAN_ISR_RXDONE_MASK      (0x00000030)
+#define CAN_ISR_ERR_MASK         (0x00003FCE)
+#define CAN_IER_ALL              (0x00003FFF)
+#define QSPI_IER_ALL             (0x07070001)
+#define QSPI_ISR_SPIDONE_MASK    (0x00000001)
+#define QSPI_ISR_ERR_MASK        (0x07070000)
+#define SYSMON_HW_IER_ALL        (0x00000F9F)
+#define SYSMON_BHM_ISR_INIT_MASK (0x00000001)
+#define SYSMON_BHM_ISR_ERR_MASK  (0x00033F02)
 
 uint32_t irq_err_cnt = 0;
 
@@ -31,6 +32,7 @@ extern bool can_rx_done;
 extern bool qspi_norflash_done;
 extern bool qspi_fram_done;
 extern bool first_can_err_isr;
+extern bool i2c_initalized;
 
 enum ScObcA1IrqNo {
 	IRQ_NO_UART = 0,
@@ -150,10 +152,19 @@ void sysmon_bhm_irq_cb(void *arg)
 {
 	uint32_t isr = sys_read32(SCOBCA1_FPGA_SYSMON_BHM_ISR);
 
-	/* System Monitor (BHM) ISR is all error bit */
-	err("  !!! Assertion failed: Invalid System Monitor (BHM) ISR: 0x%08x\n", isr);
+	debug("* BHM ISR 0x%08x\n", isr);
 	write32(SCOBCA1_FPGA_SYSMON_BHM_ISR, isr);
-	irq_err_cnt++;
+
+	/* Check I2C Init done bit */
+	if ((isr & SYSMON_BHM_ISR_INIT_MASK) != 0) {
+		i2c_initalized = true;
+	}
+
+	/* Check error bit */
+	if ((isr & SYSMON_BHM_ISR_ERR_MASK) != 0) {
+		irq_err_cnt++;
+		err("  !!! Assertion failed: Invalid System Monitor (BHM) ISR: 0x%08x\n", isr);
+	}
 }
 
 void irq_init(void) {
@@ -186,7 +197,7 @@ void irq_init(void) {
 	write32(SCOBCA1_FPGA_FRAM_QSPI_IER, QSPI_IER_ALL);
 	write32(SCOBCA1_FPGA_CAN_IER, CAN_IER_ALL);
 	write32(SCOBCA1_FPGA_SYSMON_INT_ENABLE, SYSMON_HW_IER_ALL);
-	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, SYSMON_BHM_IER_ALL);
+	/* BHM IER is enabled by bhm_test.c */
 
 	/* Enable HRMEM Scrubing */
 	write32(SCOBCA1_FPGA_HRMEM_ECCCOLENR, 0x01);

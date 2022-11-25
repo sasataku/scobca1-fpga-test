@@ -10,6 +10,7 @@
 #include "general_timer_reg.h"
 #include "bhm_test.h"
 
+bool i2c_initalized = false;
 extern bool is_exit;
 
 static float convert_temp(uint32_t raw_tmp)
@@ -158,10 +159,10 @@ static uint32_t assert_cv(void)
 bool bhm_enable(void)
 {
 	debug("* [#1] Clear Board Health Interrupt\n");
-	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, 0xFFFFFFFF);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0xFFFFFFFF);
 
-	debug("* [#2] Enable Board Health Interrupt\n");
-	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, 0x00073F03);
+	debug("* [#2] Enable Board Health Interrupt (Without Tempature Alert)\n");
+	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, 0x00033F03);
 
 	debug("* [#3] Set I2C Access Count Setting to 0 (No retry)\n");
 	write32(SCOBCA1_FPGA_SYSMON_BHM_I2CACCCNTR, 0x00);
@@ -169,16 +170,16 @@ bool bhm_enable(void)
 	debug("* [#4] Enable all sensor device initialization\n");
 	write32(SCOBCA1_FPGA_SYSMON_BHM_INICTLR, 0x0001001F);
 
-	k_sleep(K_MSEC(100));
-
-	debug("* [#5] Verify initialization and clear\n");
-	if (!assert32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0x01, REG_READ_RETRY(10))) {
-		assert();
-		return false;
+	debug("* [#5] Verify initialization\n");
+	for (int8_t i=0; i<10; i++) {
+		if (i2c_initalized) {
+			break;
+		}
+		k_sleep(K_MSEC(10));
 	}
-	write32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0x01);
-	if (!assert32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0x00, REG_READ_RETRY(10))) {
-		assert();
+
+	if (!i2c_initalized) {
+		err("  !!! Assertion failed: I2C sensor init timed out\n");
 		return false;
 	}
 
