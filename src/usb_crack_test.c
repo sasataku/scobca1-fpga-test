@@ -25,6 +25,9 @@ uint32_t usb_crack_test(uint32_t test_no)
 	 * 5. USB Ready (CS: High, RESET: High) -> Clock ON
 	 */
 
+	uint32_t saved_cs_mode = get_test_gpio_mode(TEST_CTRL_ULPI_CS);
+	uint32_t saved_reset_mode = get_test_gpio_mode(TEST_CTRL_ULPI_RESET_B);
+
 	set_test_gpio_mode(TEST_CTRL_ULPI_CS, TEST_GPIO_OUT_HIGH);
 	set_test_gpio_mode(TEST_CTRL_ULPI_RESET_B, TEST_GPIO_OUT_HIGH);
 	if(!(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK))){
@@ -50,6 +53,9 @@ uint32_t usb_crack_test(uint32_t test_no)
 	if(!(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK))){
 			err_count++;
 	}
+
+	set_test_gpio_mode(TEST_CTRL_ULPI_CS, saved_cs_mode);
+	set_test_gpio_mode(TEST_CTRL_ULPI_RESET_B, saved_reset_mode);
 
 	info("*** test done, error count: %d ***\n", err_count);
 
