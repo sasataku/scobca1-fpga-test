@@ -13,6 +13,7 @@
 #define SCOBCA1_TEMP_LIMIT_LOWER (-40)
 
 bool bhm_enable(void);
+void bhm_disable(void);
 uint32_t bhm_read_sensor_data(void);
 uint32_t bhm_test(uint32_t test_no);
 uint32_t i2c_internal_crack_test(uint32_t test_no);
