@@ -17,31 +17,35 @@
 #define QSPI_NOR_FLASH_DUMMY_CYCLE_COUNT (4u)
 #define QSPI_SPI_MODE_QUAD (0x00020000)
 
-static uint32_t qspi_select_mem(uint32_t base, uint8_t mem_no)
+static bool qspi_select_mem(uint32_t base, uint8_t mem_no, uint32_t *spi_ss)
 {
-	uint32_t spi_ss;
-
 	if (base == SCOBCA1_FPGA_CFG_BASE_ADDR) {
 		/* Config Memory is switched by CFGMEMSEL */
 		if (mem_no == QSPI_DATA_MEM0) {
 			debug("* [#0] Select Config Memory 0\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00);
-			assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00, REG_READ_RETRY(10));
+			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00, REG_READ_RETRY(10))) {
+				err("  !!! Can not select Config Memory %d\n", mem_no);
+				return false;
+			}
 		} else {
 			debug("* [#0] Select Config Memory 1\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x10);
-			assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x30, REG_READ_RETRY(10));
+			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x30, REG_READ_RETRY(10))) {
+				err("  !!! Can not select Config Memory %d\n", mem_no);
+				return false;
+			}
 		}
-		spi_ss = 0x01;
+		*spi_ss = 0x01;
 	} else {
 		if (mem_no == QSPI_DATA_MEM0) {
-			spi_ss = QSPI_DATA_MEM0_SS;
+			*spi_ss = QSPI_DATA_MEM0_SS;
 		} else {
-			spi_ss = QSPI_DATA_MEM1_SS;
+			*spi_ss = QSPI_DATA_MEM1_SS;
 		}
 	}
 
-	return spi_ss;
+	return true;
 }
 
 static bool is_qspi_idle(uint32_t base)
@@ -340,11 +344,13 @@ static bool qspi_norflash_init(uint32_t base, uint8_t mem_no)
 	uint32_t spi_ss;
 
 	if (mem_no > 1) {
-		err("Invalid Mem number %d (expected 0 or 1)\n", mem_no);
+		err("   !!! Invalid Mem number %d (expected 0 or 1)\n", mem_no);
 		return false;
 	}
 
-	spi_ss = qspi_select_mem(base, mem_no);
+	if (!qspi_select_mem(base, mem_no, &spi_ss)) {
+		return false;
+	}
 
 	debug("* [#1] Clear Status Register\n");
 	if (!clear_status_register(base, spi_ss)) {
@@ -523,7 +529,9 @@ bool qspi_norflash_erase(uint32_t base, uint8_t mem_no, enum QspiEraseType type,
 		return false;
 	}
 
-	spi_ss = qspi_select_mem(base, mem_no);
+	if (!qspi_select_mem(base, mem_no, &spi_ss)) {
+		return false;
+	}
 
 	debug("* [#1] Clear Status Register\n");
 	if (!clear_status_register(base, spi_ss)) {
@@ -579,7 +587,9 @@ bool qspi_norflash_read(uint32_t base, uint8_t mem_no, uint32_t mem_addr, uint8_
 		return false;
 	}
 
-	spi_ss = qspi_select_mem(base, mem_no);
+	if (!qspi_select_mem(base, mem_no, &spi_ss)) {
+		return false;
+	}
 
 	debug("* [#1] Set QUAD-IO Read Mode\n");
 	if (!qspi_norflash_set_quad_read_mode(base, spi_ss)) {
@@ -609,7 +619,9 @@ bool qspi_norflash_multi_read(uint32_t base, uint8_t mem_no, uint32_t mem_addr, 
 		return false;
 	}
 
-	spi_ss = qspi_select_mem(base, mem_no);
+	if (!qspi_select_mem(base, mem_no, &spi_ss)) {
+		return false;
+	}
 
 	debug("* [#1] Clear Status Register\n");
 	if (!clear_status_register(base, spi_ss)) {
@@ -653,7 +665,9 @@ bool qspi_norflash_write(uint32_t base, uint8_t mem_no, uint32_t mem_addr,
 		return false;
 	}
 
-	spi_ss = qspi_select_mem(base, mem_no);
+	if (!qspi_select_mem(base, mem_no, &spi_ss)) {
+		return false;
+	}
 
 	debug("* [#1] Clear Status Register\n");
 	if (!clear_status_register(base, spi_ss)) {
@@ -696,7 +710,9 @@ bool qspi_norflash_multi_write(uint32_t base, uint8_t mem_no, uint32_t mem_addr,
 		return false;
 	}
 
-	spi_ss = qspi_select_mem(base, mem_no);
+	if (!qspi_select_mem(base, mem_no, &spi_ss)) {
+		return false;
+	}
 
 	debug("* [#1] Clear Status Register\n");
 	if (!clear_status_register(base, spi_ss)) {
