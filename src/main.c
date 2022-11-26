@@ -86,11 +86,11 @@ uint8_t get_port_d(void) { return PORTD; }
 uint8_t get_port_e(void) { return PORTE; }
 
 /* Port Set */
-void set_port_a(uint8_t val) { /* PORTA = val; */ }
-void set_port_b(uint8_t val) { /* PORTB = val; */ }
-void set_port_c(uint8_t val) { /* PORTC = val; */ }
-void set_port_d(uint8_t val) { /* PORTD = val; */ }
-void set_port_e(uint8_t val) { /* PORTE = val; */ }
+void set_port_a(uint8_t val) { PORTA = val; }
+void set_port_b(uint8_t val) { PORTB = val; }
+void set_port_c(uint8_t val) { PORTC = val; }
+void set_port_d(uint8_t val) { PORTD = val; }
+void set_port_e(uint8_t val) { PORTE = val; }
 
 /* TRIS Get */
 uint8_t get_tris_a(void) { return TRISA; }
@@ -100,11 +100,11 @@ uint8_t get_tris_d(void) { return TRISD; }
 uint8_t get_tris_e(void) { return TRISE; }
 
 /* TRIS Set */
-void set_tris_a(uint8_t val) { /* TRISA = val; */ }
-void set_tris_b(uint8_t val) { /* TRISB = val; */ }
-void set_tris_c(uint8_t val) { /* TRISC = val; */ }
-void set_tris_d(uint8_t val) { /* TRISD = val; */ }
-void set_tris_e(uint8_t val) { /* TRISE = val; */ }
+void set_tris_a(uint8_t val) { TRISA = val; }
+void set_tris_b(uint8_t val) { TRISB = val; }
+void set_tris_c(uint8_t val) { TRISC = val; }
+void set_tris_d(uint8_t val) { TRISD = val; }
+void set_tris_e(uint8_t val) { TRISE = val; }
 
 int spi_recv(uint8_t *buf, uint8_t len);
 void test_ok(bool ok);
