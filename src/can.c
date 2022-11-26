@@ -133,6 +133,9 @@ bool can_terminate(bool test_mode)
 		write32(SCOBCA1_FPGA_CAN_STMCR, 0x00);
 	}
 
+	debug("* Clear All FIFO\n");
+	write32(SCOBCA1_FPGA_CAN_FIFORR, 0xFFFFFFFF);
+
 	debug("* Verify CAN Interrupt Register (No interupt: 0x00)\n");
 	if (!assert32(SCOBCA1_FPGA_CAN_ISR, 0x00, REG_READ_RETRY(10))) {
 		assert();

@@ -10,13 +10,13 @@
 #include "common.h"
 #include "can.h"
 
-static bool can_recv_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *exp_can_data, uint8_t size, bool extend)
+static bool can_recv_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *exp_can_data,
+							uint8_t size, bool extend, uint32_t timeout_us)
 {
 	bool ret = true;
 
 	uint32_t data_word1;
 	uint32_t data_word2;
-	int32_t timeout_us = 10;
 
 	if (!is_can_rx_done(timeout_us)) {
 		err("  !!! Assertion failed: CAN RX DONE timed out\n");
@@ -122,6 +122,8 @@ static bool can_crack_loopback_test(void)
 	uint8_t can_data[CAN_PKT_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
 	bool extend = false;
 	int32_t timeout_us = 1000000;
+	uint16_t recv_can_id = 0x02;
+	uint32_t recv_can_ext_id = 0x00;
 
 	debug("* [#1] Start CAN Test Initializing\n");
 	if (!can_init(false)) {
@@ -135,19 +137,14 @@ static bool can_crack_loopback_test(void)
 		return false;
 	}
 
-	if (!is_can_rx_done(timeout_us)) {
-		err("  !!! Assertion failed: CAN RX DONE timed out\n");
-		return false;
-	}
-
 	debug("* [#3] Start CAN Recv Test\n");
-	if (!can_recv_test(can_id, can_ext_id, can_data, CAN_PKT_SIZE, extend)) {
+	if (!can_recv_test(recv_can_id, recv_can_ext_id, can_data, CAN_PKT_SIZE, extend, timeout_us)) {
 		assert();
 		return true;
 	}
 
-	debug("* [#4] Start CAN Test Terminating)\n");
-	if (!can_terminate(true)) {
+	debug("* [#4] Start CAN Test Terminating\n");
+	if (!can_terminate(false)) {
 		assert();
 		return true;
 	}
@@ -206,6 +203,7 @@ uint32_t can_loopback(void)
 	uint16_t can_id = 0x0123;
 	uint32_t can_ext_id = 0x35678;
 	uint8_t can_data[CAN_PKT_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF1};
+	uint32_t timeout_us = 10;
 	bool extend = true;
 
 	debug("* [#1] Start CAN Test Initializing (for Test Mode)\n");
@@ -223,7 +221,7 @@ uint32_t can_loopback(void)
 	}
 
 	debug("* [#3] Start CAN Recv Test\n");
-	if (!can_recv_test(can_id, can_ext_id, can_data, CAN_PKT_SIZE, extend)) {
+	if (!can_recv_test(can_id, can_ext_id, can_data, CAN_PKT_SIZE, extend, timeout_us)) {
 		assert();
 		err_cnt++;
 		goto end_of_test;
