@@ -115,6 +115,91 @@ static bool can_send_cmd_to_trch(uint8_t cmd_code)
 	return true;
 }
 
+static bool can_crack_loopback_test(void)
+{
+	uint16_t can_id = 0x01;
+	uint32_t can_ext_id = 0x00;
+	uint8_t can_data[CAN_PKT_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+	bool extend = false;
+	int32_t timeout_us = 1000000;
+
+	debug("* [#1] Start CAN Test Initializing\n");
+	if (!can_init(false)) {
+		assert();
+	}
+
+	debug("* [#2] Start CAN command Sending\n");
+	first_can_err_isr = false;
+	if (!can_send_full(can_id, can_ext_id, can_data, CAN_PKT_SIZE, extend)) {
+		assert();
+		return false;
+	}
+
+	if (!is_can_rx_done(timeout_us)) {
+		err("  !!! Assertion failed: CAN RX DONE timed out\n");
+		return false;
+	}
+
+	debug("* [#3] Start CAN Recv Test\n");
+	if (!can_recv_test(can_id, can_ext_id, can_data, CAN_PKT_SIZE, extend)) {
+		assert();
+		return true;
+	}
+
+	debug("* [#4] Start CAN Test Terminating)\n");
+	if (!can_terminate(true)) {
+		assert();
+		return true;
+	}
+
+	return true;
+}
+
+static bool can_crack_sleep_en_test(void)
+{
+	uint16_t can_id = 0x01;
+	uint32_t can_ext_id = 0x00;
+	uint8_t can_data[CAN_PKT_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
+	bool extend = false;
+	uint32_t data_word1;
+	uint32_t data_word2;
+
+	debug("* [#1] Enable CAN PHY Sleep Mode\n");
+	write32(SCOBCA1_FPGA_CAN_PSLMCR, 0x01);
+
+	debug("* [#2] Start CAN Test Initializing\n");
+	if (!can_init(false)) {
+		assert();
+		return false;
+	}
+
+	debug("* [#3] Send CAN ID\n");
+	first_can_err_isr = false;
+	write32(SCOBCA1_FPGA_CAN_TMR1, can_get_idr(can_id, can_ext_id, extend));
+
+	debug("* [#4] Send CAN Packet size\n");
+	write32(SCOBCA1_FPGA_CAN_TMR2, CAN_PKT_SIZE);
+
+	debug("* Send CAN Data %d byte\n", CAN_PKT_SIZE);
+	can_convert_can_data_to_word(can_data, CAN_PKT_SIZE, &data_word1, &data_word2);
+	write32(SCOBCA1_FPGA_CAN_TMR3, data_word1);
+	write32(SCOBCA1_FPGA_CAN_TMR4, data_word2);
+
+	if (is_can_tx_done()) {
+		err("  !!! Assertion failed: even if CAN PHY Sleep, but CAN TX Done,\n");
+		return false;
+	}
+	info("*** CAN TX Done timeout, but it's expected behavior\n");
+
+	debug("* [#4] Start CAN Test Terminating)\n");
+	if (!can_terminate(false)) {
+		assert();
+		return false;
+	}
+
+	return true;
+}
+
 uint32_t can_loopback(void)
 {
 	uint32_t err_cnt = 0;
@@ -189,4 +274,25 @@ uint32_t can_send_cmd(uint32_t test_no)
 
 	print_result(test_no, err_cnt);
 	return err_cnt;
+}
+
+uint32_t can_crack_test(uint32_t test_no)
+{
+	uint32_t err_num = 0;
+
+	info("*** System Clock crack test starts ***\n");
+
+	info("*** [#1] Start CAN Loop back Test\n");
+	if (!can_crack_loopback_test()) {
+		err_num++;
+	}
+
+	info("*** [#2] Start CAN SLEEP Enable Test\n");
+	if (!can_crack_sleep_en_test()) {
+		err_num++;
+	}
+
+	info("*** test done, error count: %d ***\n", err_num);
+
+	return err_num;
 }
