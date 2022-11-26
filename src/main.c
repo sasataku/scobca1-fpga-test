@@ -19,7 +19,6 @@
 #include "usb_crack_test.h"
 #include "pudc_crack_test.h"
 #include "sys_clock_crack_test.h"
-#include "i2c_ext_crack_test.h"
 #include "user_io_crack_test.h"
 #include "sram_addr_crack_test.h"
 #include "sram_byte_crack_test.h"
@@ -48,7 +47,6 @@ enum ScTestNo {
 	SC_TEST_BOARD_HEALTH_MONITOR,
 	SC_TEST_CRACK_PUDC,
 	SC_TEST_CRACK_USER_IO,
-	SC_TEST_CRACK_I2C_EXT,
 	SC_TEST_CRACK_SYS_CLOCK,
 	SC_TEST_CRACK_USB,
 	SC_TEST_CRACK_SRAM_ADDR,
@@ -80,7 +78,6 @@ void print_menu(void)
 	/* for crack and bridge testing */
 	info("[%d] PUDC crack Test\n", SC_TEST_CRACK_PUDC);
 	info("[%d] User IO crack Test\n", SC_TEST_CRACK_USER_IO);
-	info("[%d] External I2C crack Test\n", SC_TEST_CRACK_I2C_EXT);
 	info("[%d] System Clock crack Test\n", SC_TEST_CRACK_SYS_CLOCK);
 	info("[%d] USB crack Test\n", SC_TEST_CRACK_USB);
 	info("[%d] SRAM addr crack Test\n", SC_TEST_CRACK_SRAM_ADDR);
@@ -182,9 +179,6 @@ void main(void)
 			break;
 		case SC_TEST_CRACK_USB:
 			usb_crack_test(test_no);
-			break;
-		case SC_TEST_CRACK_I2C_EXT:
-			i2c_ext_crack_test(test_no);
 			break;
 		case SC_TEST_CRACK_PUDC:
 			pudc_crack_test(test_no);
