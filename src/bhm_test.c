@@ -10,20 +10,53 @@
 #include "general_timer_reg.h"
 #include "bhm_test.h"
 
+#define I2C_DEV_DEFAULT_CVM_THREHOLD      (0x00007FF8)
+#define I2C_DEV_DEFAULT_TEMP_LOW_THREHOLD (0x00004B00)
+#define I2C_DEV_DEFAULT_TEMP_HI_THREHOLD  (0x00005000)
+#define I2C_ALERT_MONITOR_REG (0x4FF00500)
+#define I2C_DEV_CVM1 (0x00)
+#define I2C_DEV_CVM2 (0x01)
+#define I2C_DEV_TEMP1 (0x02)
+#define I2C_DEV_TEMP2 (0x03)
+#define I2C_DEV_TEMP3 (0x04)
+#define I2C_DEV_ALERT_HI_ALL     (0x00000007)
+#define I2C_DEV_ALERT_LOW_CVMCRT (0x00000006)
+#define I2C_DEV_ALERT_LOW_CVMWAN (0x00000005)
+#define I2C_DEV_ALERT_LOW_TEMP   (0x00000003)
+#define I2C_DEV_TEMPALERT_MASK   (0x00040000)
+#define I2C_DEV_CVMWARN_MASK     (0x00020000)
+#define I2C_DEV_CVMCRIT_MASK     (0x00010000)
+#define I2C_DEV_TEMPALERT_SHIFT  (18u)
+#define I2C_DEV_CVMWARN_SHIFT    (17u)
+#define I2C_DEV_CVMCRIT_SHIFT    (16u)
+
 bool i2c_initalized = false;
+bool i2c_sw_access_done = false;
+uint32_t last_i2c_isr = 0;
 extern bool is_exit;
 
-static float convert_temp(uint32_t raw_tmp)
+static bool is_i2c_access_done(void)
 {
-	float conv_tmp;
+	for (uint8_t i=0; i<10; i++) {
+		if (i2c_sw_access_done) {
+			i2c_sw_access_done = false;
+			return true;
+		}
+		k_usleep(10);
+	}
 
-	conv_tmp = ((raw_tmp & 0x0000FF00) >> 8) +
-				(((raw_tmp & 0x000000F0) >> 4) * 0.0625);
-
-	return conv_tmp;
+	return false;
 }
 
-static float convert_xadc_temp(uint32_t raw_tmp)
+static float convert_tmp(uint32_t raw_tmp)
+{
+	int8_t int_tmp = (raw_tmp & 0x0000FF00) >> 8;
+	float point = ((raw_tmp & 0x000000F0) >> 4) * 0.0625;
+
+	return int_tmp + point;
+}
+
+static float convert_xadc_tmp(uint32_t raw_tmp)
 {
 	float conv_tmp;
 
@@ -61,10 +94,10 @@ static bool assert_i2c_access(uint32_t raw_val)
 	}
 }
 
-static uint32_t assert_temp(void)
+static uint32_t assert_tmp(void)
 {
 	uint32_t err_cnt = 0;
-	uint32_t xadc_raw_temp;
+	uint32_t xadc_raw_tmp;
 	uint32_t raw_tmp;
 	float tmp;
 	float xadc_tmp;
@@ -74,11 +107,11 @@ static uint32_t assert_temp(void)
 
 	for (uint8_t i=0; i<ARRAY_SIZE(tmp_regs); i++) {
 		raw_tmp = sys_read32(tmp_regs[i]);
-		tmp = convert_temp(raw_tmp);
+		tmp = convert_tmp(raw_tmp);
 		info("  Temperature Sensor %d : %.4f C (RAW:0x%08x)\n", i+1, tmp, raw_tmp);
 		if (assert_i2c_access(raw_tmp)) {
 			if ((tmp < SCOBCA1_TEMP_LIMIT_LOWER || tmp > SCOBCA1_TEMP_LIMIT_UPPER)) {
-				err("  !!! Assertion failed: abnormal temperature (Temperature Sensor %d)\n", i+1);
+				err("  !!! Assertion failed: abnormal tmperature (Temperature Sensor %d)\n", i+1);
 				write32(SCOBCA1_FPGA_SYSREG_PWRCYCLE, 0x5A5A0001);
 				err_cnt++;
 			}
@@ -88,11 +121,11 @@ static uint32_t assert_temp(void)
 	}
 
 	/* XADC Temperature */
-	xadc_raw_temp = sys_read32(SCOBCA1_FPGA_SYSMON_XADC_TEMP);
-	xadc_tmp = convert_xadc_temp(xadc_raw_temp);
-	info("  XADC Temperature    : %.4f C (RAW:0x%08x)\n", xadc_tmp, xadc_raw_temp);
+	xadc_raw_tmp = sys_read32(SCOBCA1_FPGA_SYSMON_XADC_TEMP);
+	xadc_tmp = convert_xadc_tmp(xadc_raw_tmp);
+	info("  XADC Temperature    : %.4f C (RAW:0x%08x)\n", xadc_tmp, xadc_raw_tmp);
 	if ((xadc_tmp < SCOBCA1_TEMP_LIMIT_LOWER || xadc_tmp > SCOBCA1_TEMP_LIMIT_UPPER)) {
-		err("  !!! Assertion failed: abnormal temperature (XADC Temperature)\n");
+		err("  !!! Assertion failed: abnormal tmperature (XADC Temperature)\n");
 		write32(SCOBCA1_FPGA_SYSREG_PWRCYCLE, 0x5A5A0001);
 		err_cnt++;
 	}
@@ -156,6 +189,202 @@ static uint32_t assert_cv(void)
 	return err_cnt;
 }
 
+static bool cvm_critical_alert_test(uint8_t dev_no, uint16_t threshold)
+{
+	bool ret = true;
+	uint32_t val;
+	uint32_t ctrl = 0;
+
+	/* Write threhsold value */
+	val = threshold << 3;
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWWDTR, val);
+
+	/* I2C control */
+	ctrl = 0x01000700 | (dev_no << 16);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWCTLR, ctrl);
+
+	if (!is_i2c_access_done()) {
+		err("  !!! Assertion failed: I2C SW Access Done timed out\n");
+		ret = false;
+		goto end_of_test;
+	}
+
+	/* Wait the alert interrupt */
+	k_sleep(K_MSEC(10));
+
+	/*  Verify latest ISR value */
+	if (((last_i2c_isr & I2C_DEV_CVMCRIT_MASK) >> I2C_DEV_CVMCRIT_SHIFT) == 0) {
+		err("  !!! Assertion failed: CVM Critical Alert is not detected\n");
+		ret = false;
+		goto end_of_test;
+	}
+	info("* CVM Critical Alert is detected, but it's expected behavior\n");
+
+	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_LOW_CVMCRT, REG_READ_RETRY(0))) {
+		ret = false;
+		goto end_of_test;
+	}
+
+	/* Back to default threshold */
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWWDTR, I2C_DEV_DEFAULT_CVM_THREHOLD);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWCTLR, ctrl);
+	if (!is_i2c_access_done()) {
+		err("  !!! Assertion failed: I2C SW Access Done timed out\n");
+		ret = false;
+		goto end_of_test;
+	}
+
+	k_sleep(K_MSEC(10));
+
+	/* Verify Alert signal (All Hi) */
+	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_HI_ALL, REG_READ_RETRY(0))) {
+		ret = false;
+		goto end_of_test;
+	}
+
+end_of_test:
+	last_i2c_isr = 0;
+	return true;
+}
+
+static bool cvm_warn_alert_test(uint8_t dev_no, uint16_t threshold)
+{
+	bool ret = true;
+	uint32_t val;
+	uint32_t ctrl = 0;
+
+	/* Write threhsold value */
+	val = threshold << 3;
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWWDTR, val);
+
+	/* I2C control */
+	ctrl = 0x01000800 | (dev_no << 16);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWCTLR, ctrl);
+
+	if (!is_i2c_access_done()) {
+		err("  !!! Assertion failed: I2C SW Access Done timed out\n");
+		ret = false;
+		goto end_of_test;
+	}
+
+	/* Wait the alert interrupt */
+	k_sleep(K_MSEC(10));
+
+	/*  Verify latest ISR value */
+	if (((last_i2c_isr & I2C_DEV_CVMWARN_MASK) >> I2C_DEV_CVMWARN_SHIFT) == 0) {
+		err("  !!! Assertion failed: CVM Critical Alert is not detected\n");
+		ret = false;
+		goto end_of_test;
+	}
+	info("* CVM Warning Alert is detected, but it's expected behavior\n");
+
+	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_LOW_CVMWAN, REG_READ_RETRY(0))) {
+		ret = false;
+		goto end_of_test;
+	}
+
+	/* Back to default threshold */
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWWDTR, I2C_DEV_DEFAULT_CVM_THREHOLD);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWCTLR, ctrl);
+	if (!is_i2c_access_done()) {
+		err("  !!! Assertion failed: I2C SW Access Done timed out\n");
+		ret = false;
+		goto end_of_test;
+	}
+
+	k_sleep(K_MSEC(10));
+
+	/* Verify Alert signal (All Hi) */
+	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_HI_ALL, REG_READ_RETRY(0))) {
+		ret = false;
+		goto end_of_test;
+	}
+
+end_of_test:
+	last_i2c_isr = 0;
+	return ret;
+}
+
+static bool tmp_alert_test(uint8_t dev_no, uint16_t low, uint16_t hi)
+{
+	bool ret = true;
+	uint32_t val;
+	uint32_t ctrl_low = 0;
+	uint32_t ctrl_hi = 0;
+
+	/* Write threhsold value (Tlow) */
+	val = low << 4;
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWWDTR, val);
+
+	/* I2C control */
+	ctrl_low = 0x01000200 | (dev_no << 16);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWCTLR, ctrl_low);
+
+	if (!is_i2c_access_done()) {
+		err("  !!! Assertion failed: I2C SW Access Done timed out\n");
+		ret = false;
+		goto end_of_test;
+	}
+
+	/* Write threhsold value (THight) */
+	val = hi << 4;
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWWDTR, val);
+
+	/* I2C control */
+	ctrl_hi = 0x01000300 | (dev_no << 16);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWCTLR, ctrl_hi);
+
+	if (!is_i2c_access_done()) {
+		err("  !!! Assertion failed: I2C SW Access Done timed out\n");
+		ret = false;
+		goto end_of_test;
+	}
+
+	/* Wait the alert interrupt */
+	k_sleep(K_MSEC(100));
+
+	/*  Verify latest ISR value */
+	if (((last_i2c_isr & I2C_DEV_TEMPALERT_MASK) >> I2C_DEV_TEMPALERT_SHIFT) == 0)  {
+		err("  !!! Assertion failed: Temperature Alert is not detected\n");
+		ret = false;
+	} else {
+		info("* Temperature Alert is detected, but it's expected behavior\n");
+	}
+
+	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_LOW_TEMP, REG_READ_RETRY(10))) {
+		ret = false;
+	}
+
+	/* Back to default threshold */
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWWDTR, I2C_DEV_DEFAULT_TEMP_LOW_THREHOLD);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWCTLR, ctrl_low);
+	if (!is_i2c_access_done()) {
+		err("  !!! Assertion failed: I2C SW Access Done timed out\n");
+		ret = false;
+		goto end_of_test;
+	}
+
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWWDTR, I2C_DEV_DEFAULT_TEMP_HI_THREHOLD);
+	write32(SCOBCA1_FPGA_SYSMON_BHM_SWCTLR, ctrl_hi);
+	if (!is_i2c_access_done()) {
+		err("  !!! Assertion failed: I2C SW Access Done timed out\n");
+		ret = false;
+		goto end_of_test;
+	}
+
+	k_sleep(K_MSEC(100));
+
+	/* Verify Alert signal (All Hi) */
+	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_HI_ALL, REG_READ_RETRY(0))) {
+		ret = false;
+		goto end_of_test;
+	}
+
+end_of_test:
+	last_i2c_isr = 0;
+	return ret;
+}
+
 bool bhm_enable(void)
 {
 	debug("* [#1] Clear Board Health Interrupt\n");
@@ -210,7 +439,7 @@ uint32_t bhm_read_sensor_data(void)
 
 	debug("* [#1] Read sensor data and verify\n");
 	err_cnt += assert_cv();
-	err_cnt += assert_temp();
+	err_cnt += assert_tmp();
 
 	return err_cnt;
 }
@@ -236,4 +465,63 @@ end_of_test:
 	print_result(test_no, err_cnt);
 
 	return err_cnt;
+}
+
+uint32_t i2c_internal_crack_test(uint32_t test_no)
+{
+	uint32_t err_num = 0;
+	uint16_t cv_threshold = 0x01;
+	uint16_t tmp_low_threshold = 0x01;
+	uint16_t tmp_hi_threshold = 0x02;
+
+	info("*** Internal I2C Alert crack test starts ***\n");
+
+	info("* [#1] Enable Board Health Interrupt\n");
+	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, 0x00073F03);
+
+	info("* [#2] Verify Alert signal (All Hi)\n");
+	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_HI_ALL, REG_READ_RETRY(0))) {
+		err_num++;
+		goto end_of_test;
+	}
+
+	info("* [#3] CVM1 critical alert test\n");
+	if (!cvm_critical_alert_test(I2C_DEV_CVM1, cv_threshold)) {
+		err_num++;
+	}
+
+	info("* [#4] CVM2 critical alert test\n");
+	if (!cvm_critical_alert_test(I2C_DEV_CVM2, cv_threshold)) {
+		err_num++;
+	}
+
+	info("* [#5] CVM1 warning alert test\n");
+	if (!cvm_warn_alert_test(I2C_DEV_CVM1, cv_threshold)) {
+		err_num++;
+	}
+
+	info("* [#6] CVM2 warning alert test\n");
+	if (!cvm_warn_alert_test(I2C_DEV_CVM1, cv_threshold)) {
+		err_num++;
+	}
+
+	info("* [#7] Temperature 1 alert test\n");
+	if (!tmp_alert_test(I2C_DEV_TEMP1, tmp_low_threshold, tmp_hi_threshold)) {
+		err_num++;
+	}
+
+	info("* [#8] Temperature 2 alert test\n");
+	if (!tmp_alert_test(I2C_DEV_TEMP2, tmp_low_threshold, tmp_hi_threshold)) {
+		err_num++;
+	}
+
+	info("* [#9] Temperature 3 alert test\n");
+	if (!tmp_alert_test(I2C_DEV_TEMP2, tmp_low_threshold, tmp_hi_threshold)) {
+		err_num++;
+	}
+
+	info("*** test done, error count: %d ***\n", err_num);
+
+end_of_test:
+	return err_num;
 }
