@@ -5,15 +5,16 @@
  */
 
 #include "common.h"
+#include "test_register.h"
 #include "usb_crack_test.h"
 
 /*
- * control CS and RESET, then check if clock works
+ * Test if USB CS and reset connection works
  */
 uint32_t usb_crack_test(uint32_t test_no)
 {
-	printk("*** USB crack test starts ***\n");
-	uint32_t err_num = 0;
+	info("*** USB crack test starts ***\n");
+	uint32_t err_count = 0;
 
 	/*
 	 * Check CS and RESET by Clock status, test flow is follows
@@ -27,30 +28,30 @@ uint32_t usb_crack_test(uint32_t test_no)
 	set_test_gpio_mode(TEST_CTRL_ULPI_CS, TEST_GPIO_OUT_HIGH);
 	set_test_gpio_mode(TEST_CTRL_ULPI_RESET_B, TEST_GPIO_OUT_HIGH);
 	if(!(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK))){
-			err_num++;
+			err_count++;
 	}
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_CS, TEST_GPIO_OUT_LOW);
 	if(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
-			err_num++;
+			err_count++;
 	}
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_CS, TEST_GPIO_OUT_HIGH);
 	if(!(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK))){
-			err_num++;
+			err_count++;
 	}
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_RESET_B, TEST_GPIO_OUT_LOW);
 	if(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
-			err_num++;
+			err_count++;
 	}
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_RESET_B, TEST_GPIO_OUT_HIGH);
 	if(!(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK))){
-			err_num++;
+			err_count++;
 	}
 
-	printk("*** test done, error count: %d ***\n", err_num);
+	info("*** test done, error count: %d ***\n", err_count);
 
-	return err_num;
+	return err_count;
 }

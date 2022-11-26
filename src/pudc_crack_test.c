@@ -9,14 +9,14 @@
 
 int pudc_crack_test(uint32_t test_no)
 {
-	printk("*** PUDC crack test starts ***\n");
-	uint32_t err_num = 0;
+	info("*** PUDC crack test starts ***\n");
+	uint32_t err_count = 0;
 
 	// must be HIGH (1)
 	if(!(read32(TEST_REG_ADDR(TEST_MONI_FPGA_CFG)) & 0x1 << MONI_BIT_FPGA_CFG)){
-		err_num++;
+		err_count++;
 	}
-	printk("*** test done, error count: %d ***\n", err_num);
+	info("*** test done, error count: %d ***\n", err_count);
 
-	return err_num;
+	return err_count;
 }
