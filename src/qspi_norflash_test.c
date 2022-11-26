@@ -848,8 +848,6 @@ static uint32_t qspi_norflash_test(uint32_t test_no, uint32_t base)
 	}
 
 end_of_test:
-	print_result(test_no, err_cnt);
-
 	return err_cnt;
 }
 
