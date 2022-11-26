@@ -37,22 +37,29 @@ static struct user_io_test_regs user_io_pairs[] =
 
 uint32_t user_io_crack_test(uint32_t test_no)
 {
-	printk("*** User IO crack test starts ***\n");
-    uint32_t err_num = 0;
+	/*
+	 * Test if external lines connection. Connect any two lines outside of the
+	 * board, Then control signal level of one line and see if it changes by the
+	 * other one.
+	 */
+
+	info("*** User IO crack test starts ***\n");
+    uint32_t err_count = 0;
 
     // control UIO2 and use UIO1 as an input, for UIO4 see array above.
-    uint32_t test_item_num = sizeof(user_io_pairs) / sizeof(struct user_io_test_regs);
+    uint32_t test_item_num =
+           	sizeof(user_io_pairs) / sizeof(struct user_io_test_regs);
 
     for(int i = 0; i < test_item_num; i++){
         struct user_io_test_regs *pair = &user_io_pairs[i];
-        err_num += test_paired_pins_connection(
+        err_count += test_paired_pins_connection(
 						pair->in_ctrl_reg,
 						pair->out_ctrl_reg,
 						pair->in_moni_reg,
 						pair->moni_bitpos
 						);
     }
-	printk("*** test done, error count: %d ***\n", err_num);
+	info("*** test done, error count: %d ***\n", err_count);
 
-    return err_num;
+    return err_count;
 }

@@ -5,21 +5,24 @@
  */
 
 #include "common.h"
-#include "test_register.h"
+#include "sys_clock_crack_test.h"
 
 uint32_t sys_clock_crack_test(uint32_t test_no)
 {
-	printk("*** System Clock crack test starts ***\n");
-	uint32_t err_num = 0;
+	/*
+	 * Test if two system clocks (SYSCLK1 and SYSCLK2) work with
+	 * the value of monitor registers
+	 */
+	info("*** System Clock crack test starts ***\n");
+	uint32_t err_count = 0;
 
-	// check if SYSCLK1 and SYSCLK2 work
 	if(!(get_test_moni_status(TEST_MONI_SYSCLK, MONI_BIT_SYSCLK2))){
-		err_num++;
+		err_count++;
 	}
 	if(!(get_test_moni_status(TEST_MONI_SYSCLK, MONI_BIT_SYSCLK1))){
-		err_num++;
+		err_count++;
 	}
-	printk("*** test done, error count: %d ***\n", err_num);
+	info("*** test done, error count: %d ***\n", err_count);
 
-	return err_num;
+	return err_count;
 }

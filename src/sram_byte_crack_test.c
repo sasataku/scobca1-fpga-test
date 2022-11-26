@@ -9,8 +9,14 @@
 
 uint32_t sram_byte_crack_test(uint32_t test_no)
 {
+	/*
+	 * test if byte access connection works by the actuall byte access using C.
+	 * prepare four differenct byte data and fill 32 bit field using each.
+	 * Then read them back to see it's correct
+	 */
+
 	info("*** SRAM byte crack test starts ***\n");
-	uint32_t err_num = 0;
+	uint32_t err_count = 0;
 
 	const uint8_t byte_data1 = 0x12;
 	const uint8_t byte_data2 = 0x34;
@@ -32,7 +38,7 @@ uint32_t sram_byte_crack_test(uint32_t test_no)
 	debug("data: 0x%08x\n", work_mem);
 
 	if(work_mem != word_data){
-			err_num++;
+			err_count++;
 	}
 
     /* read 32bit work area by byte access */
@@ -41,10 +47,10 @@ uint32_t sram_byte_crack_test(uint32_t test_no)
 	   sys_read8((mem_addr_t)(target_addr + 1)) != byte_data3 ||
 	   sys_read8((mem_addr_t)(target_addr)) != byte_data4)
 	{
-			err_num++;
+			err_count++;
 	}
 
-	info("*** test done, error count: %d ***\n", err_num);
+	info("*** test done, error count: %d ***\n", err_count);
 
-	return err_num;
+	return err_count;
 }
