@@ -109,7 +109,7 @@ void test_i2c_bridges()
         /* Recover I2C and enable SPI */
 }
 
-static void spi_dump_regs(void)
+static void can_dump_regs(void)
 {
         printf("C1CON %08lx\n", spi_read32(C1CON));
         printf("C1NBTCFG %08lx\n", spi_read32(C1NBTCFG));
@@ -123,7 +123,7 @@ static void spi_dump_regs(void)
         printf("C1FIFOUA2  %08lx\n", spi_read32(C1FIFOUA2));
 }
 
-static void spi_reset(void)
+static void can_reset(void)
 {
         uint8_t buf[2];
 
@@ -133,7 +133,7 @@ static void spi_reset(void)
         spi_release();
 }
 
-static void spi_set_bit_timing(void)
+static void can_set_bit_timing(void)
 {
         /* Setup bit rate and baud rate */
         /* we want 1 MHz baud based on 20 MHz SYSCLK.  That means the
@@ -160,7 +160,7 @@ static void spi_set_bit_timing(void)
         spi_write8(0, C1NBTCFG + 3); /* BRP */
 }
 
-static void spi_enable_tx_fifo(void)
+static void can_enable_tx_fifo(void)
 {
         /* Use FIFO 1 as Transimitting FIFO */
         spi_write8(0x80, C1FIFOCON1);
@@ -170,7 +170,7 @@ static void spi_enable_tx_fifo(void)
         printf("C1CON %08lx\n", spi_read32(C1CON));
 }
 
-static void spi_enable_rx_fifo(void)
+static void can_enable_rx_fifo(void)
 {
         /* Use FIFO 2 as Receiving FIFO */
         spi_write8(0x00, C1FIFOCON2);
@@ -237,7 +237,7 @@ void test_send(uint8_t val)
         spi_send(&val, 1, CAN_ID_FPGA);
 }
 
-static void spi_setup_filter(uint16_t sid, uint16_t sid_mask)
+static void can_setup_filter(uint16_t sid, uint16_t sid_mask)
 {
         /* Disable the filter */
         spi_write8(0, C1FLTCON0);
@@ -298,17 +298,17 @@ static void prepare_can_test(void)
         uint8_t buf;
 
         spi_init();
-        spi_reset();
-        spi_dump_regs();
-        spi_set_bit_timing();
+        can_reset();
+        can_dump_regs();
+        can_set_bit_timing();
 
         printf("C1NBTCFG %08lx\n", spi_read32(C1NBTCFG));
 
         /* Have one and only one TX FIFO for now */
-        spi_enable_tx_fifo();
+        can_enable_tx_fifo();
 
         /* Have one and only one TX FIFO for now */
-        spi_enable_rx_fifo();
+        can_enable_rx_fifo();
 
         /* with RTXAT = 1: Restricted retransmission attempts,
          * CiFIFOCONm.TXAT is used. */
@@ -318,7 +318,7 @@ static void prepare_can_test(void)
         spi_write8(0x6, C1CON + 3);
         printf("C1CON %08lx\n", spi_read32(C1CON));
 
-        spi_setup_filter(CAN_ID_TRCH, CAN_MSID);
+        can_setup_filter(CAN_ID_TRCH, CAN_MSID);
 }
 
 void do_tests(void)
