@@ -57,6 +57,7 @@ enum ScTestNo {
 	SC_TEST_BRIDGE_USER_IO,
 	SC_TEST_BRIDGE_MEMORY,
 	SC_TEST_TRCH,
+	SC_TEST_CRACK_CAN,
 };
 
 bool is_exit;
@@ -90,6 +91,7 @@ void print_menu(void)
 	info("[%d] Memory Bridge Test\n", SC_TEST_BRIDGE_MEMORY);
 
 	info("[%d] Shared Pin Test\n", SC_TEST_TRCH);
+	info("[%d] CAN crack Test\n", SC_TEST_CRACK_CAN);
 }
 
 #ifndef CONFIG_AUTO_RUN_TEST_NUMBER
@@ -209,6 +211,9 @@ void main(void)
 			break;
 		case SC_TEST_TRCH:
 			trch_test();
+			break;
+		case SC_TEST_CRACK_CAN:
+			can_crack_test(test_no);
 			break;
 		default:
 			break;
