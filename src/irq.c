@@ -20,11 +20,14 @@
 #define CAN_IER_ALL              (0x00003FFF)
 #define SYSMON_HW_IER_ALL        (0x00000F9F)
 #define SYSMON_BHM_ISR_INIT_MASK (0x00000001)
-#define SYSMON_BHM_ISR_ERR_MASK  (0x00033F02)
+#define SYSMON_BHM_ISR_SWA_MASK  (0x00000002)
+#define SYSMON_BHM_ISR_ERR_MASK  (0x00073F00)
 
 uint32_t irq_err_cnt = 0;
 
 extern bool i2c_initalized;
+extern bool i2c_sw_access_done;
+extern uint32_t last_i2c_isr;
 
 enum ScObcA1IrqNo {
 	IRQ_NO_UART = 0,
@@ -87,6 +90,7 @@ void sysmon_hw_irq_cb(void *arg)
 void sysmon_bhm_irq_cb(void *arg)
 {
 	uint32_t isr = sys_read32(SCOBCA1_FPGA_SYSMON_BHM_ISR);
+	last_i2c_isr = isr;
 
 	debug("* BHM ISR 0x%08x\n", isr);
 	write32(SCOBCA1_FPGA_SYSMON_BHM_ISR, isr);
@@ -94,6 +98,11 @@ void sysmon_bhm_irq_cb(void *arg)
 	/* Check I2C Init done bit */
 	if ((isr & SYSMON_BHM_ISR_INIT_MASK) != 0) {
 		i2c_initalized = true;
+	}
+
+	/* Check I2C SW access done */
+	if ((isr & SYSMON_BHM_ISR_SWA_MASK) != 0) {
+		i2c_sw_access_done = true;;
 	}
 
 	/* Check error bit */
@@ -120,6 +129,7 @@ void irq_init(void) {
 	/* Enable IER Ragister */
 	write32(SCOBCA1_FPGA_HRMEM_INTENR, HRMEM_IER_ALL);
 	write32(SCOBCA1_FPGA_CAN_IER, CAN_IER_ALL);
+
 	write32(SCOBCA1_FPGA_SYSMON_INT_ENABLE, SYSMON_HW_IER_ALL);
 	/* BHM IER is enabled by bhm_test.c */
 

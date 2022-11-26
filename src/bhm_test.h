@@ -15,5 +15,6 @@
 bool bhm_enable(void);
 uint32_t bhm_read_sensor_data(void);
 uint32_t bhm_test(uint32_t test_no);
+uint32_t i2c_internal_crack_test(uint32_t test_no);
 
 #endif /* SCOBCA1_FPGA_TEST_BHM_TESET_H_ */
