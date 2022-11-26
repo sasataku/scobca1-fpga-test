@@ -14,8 +14,8 @@
 #define I2C_DEV_DEFAULT_TEMP_LOW_THREHOLD (0x00004B00)
 #define I2C_DEV_DEFAULT_TEMP_HI_THREHOLD  (0x00005000)
 #define I2C_ALERT_MONITOR_REG (0x4FF00500)
-#define I2C_DEV_CVM1 (0x00)
-#define I2C_DEV_CVM2 (0x01)
+#define I2C_DEV_CVM1  (0x00)
+#define I2C_DEV_CVM2  (0x01)
 #define I2C_DEV_TEMP1 (0x02)
 #define I2C_DEV_TEMP2 (0x03)
 #define I2C_DEV_TEMP3 (0x04)
@@ -210,7 +210,7 @@ static bool cvm_critical_alert_test(uint8_t dev_no, uint16_t threshold)
 	}
 
 	/* Wait the alert interrupt */
-	k_sleep(K_MSEC(10));
+	k_sleep(K_MSEC(100));
 
 	/*  Verify latest ISR value */
 	if (((last_i2c_isr & I2C_DEV_CVMCRIT_MASK) >> I2C_DEV_CVMCRIT_SHIFT) == 0) {
@@ -234,7 +234,7 @@ static bool cvm_critical_alert_test(uint8_t dev_no, uint16_t threshold)
 		goto end_of_test;
 	}
 
-	k_sleep(K_MSEC(10));
+	k_sleep(K_MSEC(100));
 
 	/* Verify Alert signal (All Hi) */
 	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_HI_ALL, REG_READ_RETRY(0))) {
@@ -268,7 +268,7 @@ static bool cvm_warn_alert_test(uint8_t dev_no, uint16_t threshold)
 	}
 
 	/* Wait the alert interrupt */
-	k_sleep(K_MSEC(10));
+	k_sleep(K_MSEC(100));
 
 	/*  Verify latest ISR value */
 	if (((last_i2c_isr & I2C_DEV_CVMWARN_MASK) >> I2C_DEV_CVMWARN_SHIFT) == 0) {
@@ -292,7 +292,7 @@ static bool cvm_warn_alert_test(uint8_t dev_no, uint16_t threshold)
 		goto end_of_test;
 	}
 
-	k_sleep(K_MSEC(10));
+	k_sleep(K_MSEC(100));
 
 	/* Verify Alert signal (All Hi) */
 	if (!assert32(I2C_ALERT_MONITOR_REG, I2C_DEV_ALERT_HI_ALL, REG_READ_RETRY(0))) {
@@ -433,6 +433,24 @@ bool bhm_enable(void)
 	return true;
 }
 
+void bhm_disable(void)
+{
+	debug("* [#1] Clear Board Health Interrupt\n");
+	write32(SCOBCA1_FPGA_SYSMON_BHM_ISR, 0xFFFFFFFF);
+
+	debug("* [#2] Disable Board Health Interrupt\n");
+	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, 0x00);
+
+	debug("* [#3] Disable hardware interrupt timer\n");
+	write32(SCOBCA1_FPGA_GPTMR_TECR, 0x00);
+
+	debug("* [#4] Disable all sensor device monitoring\n");
+	write32(SCOBCA1_FPGA_SYSMON_BHM_MONCTLR, 0x00);
+
+	debug("* [#5] Disable all sensor device initialization\n");
+	write32(SCOBCA1_FPGA_SYSMON_BHM_INICTLR, 0x0);
+}
+
 uint32_t bhm_read_sensor_data(void)
 {
 	uint32_t err_cnt = 0;
@@ -462,6 +480,8 @@ uint32_t bhm_test(uint32_t test_no)
 	err_cnt += bhm_read_sensor_data();
 
 end_of_test:
+	info("* [%d-3] Start Disable Board Health Monitor\n", test_no);
+	bhm_disable();
 	print_result(test_no, err_cnt);
 
 	return err_cnt;
@@ -519,6 +539,9 @@ uint32_t i2c_internal_crack_test(uint32_t test_no)
 	if (!tmp_alert_test(I2C_DEV_TEMP2, tmp_low_threshold, tmp_hi_threshold)) {
 		err_num++;
 	}
+
+	info("* [#10] Disable Board Health Interrupt\n");
+	write32(SCOBCA1_FPGA_SYSMON_BHM_IER, 0x00);
 
 	info("*** test done, error count: %d ***\n", err_num);
 
