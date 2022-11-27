@@ -197,15 +197,6 @@ static void spi_send(uint8_t *buf, uint8_t len, uint16_t sid)
 {
         uint16_t addr;
 
-        /*
-          C1FIFOSTA1 を読み出し、FIFOに空きがあることを確認(TFNRFNIF==1)
-          C1FIFOUA1 を読み出し、送信FIFOのアドレスを取得
-          0x400 + アドレス + 0 にCAN IDを書き込み
-          0x400 + アドレス + 4 にDLCなどを書き込み
-          0x400 + アドレス + 8 以降に送信データを書き込み
-          C1FIFOCON2 のTXREQとUINCを1にして書き込み(転送を開始し、FIFOを進める)
-        */
-
         printf("C1FIFOSTA1 %08lx\n", spi_read32(C1FIFOSTA1));
 
         addr = spi_read16(C1FIFOUA1);
