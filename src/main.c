@@ -25,7 +25,7 @@
 #include "sram_err_crack_test.h"
 #include "sram_data_crack_test.h"
 #include "user_io_bridge_test.h"
-#include "qspi_bridge_test.h"
+#include "memory_bridge_test.h"
 #include "can_test.h"
 #include "bhm_test.h"
 #include "system_reg.h"
@@ -55,7 +55,7 @@ enum ScTestNo {
 	SC_TEST_CRACK_SRAM_ERR,
 	SC_TEST_CRACK_SRAM_DATA,
 	SC_TEST_BRIDGE_USER_IO,
-	SC_TEST_BRIDGE_QSPI,
+	SC_TEST_BRIDGE_MEMORY,
 	SC_TEST_TRCH,
 };
 
@@ -87,7 +87,7 @@ void print_menu(void)
 	info("[%d] SRAM err crack Test\n", SC_TEST_CRACK_SRAM_ERR);
 	info("[%d] SRAM data crack Test\n", SC_TEST_CRACK_SRAM_DATA);
 	info("[%d] User IO Bridge Test\n", SC_TEST_BRIDGE_USER_IO);
-	info("[%d] QSPI Bridge Test\n", SC_TEST_BRIDGE_QSPI);
+	info("[%d] Memory Bridge Test\n", SC_TEST_BRIDGE_MEMORY);
 
 	info("[%d] Shared Pin Test\n", SC_TEST_TRCH);
 }
@@ -180,8 +180,8 @@ void main(void)
 		case SC_TEST_BRIDGE_USER_IO:
 			user_io_bridge_test(test_no);
 			break;
-		case SC_TEST_BRIDGE_QSPI:
-			qspi_bridge_test(test_no);
+		case SC_TEST_BRIDGE_MEMORY:
+			memory_bridge_test(test_no);
 			break;
 		case SC_TEST_CRACK_USB:
 			usb_crack_test(test_no);

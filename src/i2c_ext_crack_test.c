@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+#include "common.h"
 #include "test_register.h"
 #include "i2c_ext_crack_test.h"
 
