@@ -86,11 +86,11 @@ uint8_t get_port_d(void) { return PORTD; }
 uint8_t get_port_e(void) { return PORTE; }
 
 /* Port Set */
-void set_port_a(uint8_t val) { PORTA = val; }
-void set_port_b(uint8_t val) { PORTB = val; }
-void set_port_c(uint8_t val) { PORTC = val; }
-void set_port_d(uint8_t val) { PORTD = val; }
-void set_port_e(uint8_t val) { PORTE = val; }
+uint8_t set_port_a(uint8_t val) { PORTA = val; return PORTA; }
+uint8_t set_port_b(uint8_t val) { PORTB = val; return PORTB; }
+uint8_t set_port_c(uint8_t val) { PORTC = val; return PORTC; }
+uint8_t set_port_d(uint8_t val) { PORTD = val; return PORTD; }
+uint8_t set_port_e(uint8_t val) { PORTE = val; return PORTE; }
 
 /* TRIS Get */
 uint8_t get_tris_a(void) { return TRISA; }
@@ -100,11 +100,11 @@ uint8_t get_tris_d(void) { return TRISD; }
 uint8_t get_tris_e(void) { return TRISE; }
 
 /* TRIS Set */
-void set_tris_a(uint8_t val) { TRISA = val; }
-void set_tris_b(uint8_t val) { TRISB = val; }
-void set_tris_c(uint8_t val) { TRISC = val; }
-void set_tris_d(uint8_t val) { TRISD = val; }
-void set_tris_e(uint8_t val) { TRISE = val; }
+uint8_t set_tris_a(uint8_t val) { TRISA = val; return TRISA; }
+uint8_t set_tris_b(uint8_t val) { TRISB = val; return TRISB; }
+uint8_t set_tris_c(uint8_t val) { TRISC = val; return TRISC; }
+uint8_t set_tris_d(uint8_t val) { TRISD = val; return TRISD; }
+uint8_t set_tris_e(uint8_t val) { TRISE = val; return TRISE; }
 
 int spi_recv(uint8_t *buf, uint8_t len);
 void test_ok(bool ok);
@@ -135,11 +135,11 @@ void do_active(void)
                 case 'd': val = get_port_d(); test_send(val); break;
                 case 'e': val = get_port_e(); test_send(val); break;
 
-                case 'A': set_port_a(cmd[1]); test_ok(true); break;
-                case 'B': set_port_b(cmd[1]); test_ok(true); break;
-                case 'C': set_port_c(cmd[1]); test_ok(true); break;
-                case 'D': set_port_d(cmd[1]); test_ok(true); break;
-                case 'E': set_port_e(cmd[1]); test_ok(true); break;
+                case 'A': val = set_port_a(cmd[1]); test_send(val); break;
+                case 'B': val = set_port_b(cmd[1]); test_send(val); break;
+                case 'C': val = set_port_c(cmd[1]); test_send(val); break;
+                case 'D': val = set_port_d(cmd[1]); test_send(val); break;
+                case 'E': val = set_port_e(cmd[1]); test_send(val); break;
 
                 case 't': val = get_tris_a(); test_send(val); break;
                 case 'u': val = get_tris_b(); test_send(val); break;
@@ -147,11 +147,11 @@ void do_active(void)
                 case 'w': val = get_tris_d(); test_send(val); break;
                 case 'x': val = get_tris_e(); test_send(val); break;
 
-                case 'T': set_tris_a(cmd[1]); test_ok(true); break;
-                case 'U': set_tris_b(cmd[1]); test_ok(true); break;
-                case 'V': set_tris_c(cmd[1]); test_ok(true); break;
-                case 'W': set_tris_d(cmd[1]); test_ok(true); break;
-                case 'X': set_tris_e(cmd[1]); test_ok(true); break;
+                case 'T': val = set_tris_a(cmd[1]); test_send(val); break;
+                case 'U': val = set_tris_b(cmd[1]); test_send(val); break;
+                case 'V': val = set_tris_c(cmd[1]); test_send(val); break;
+                case 'W': val = set_tris_d(cmd[1]); test_send(val); break;
+                case 'X': val = set_tris_e(cmd[1]); test_send(val); break;
 
                 default:
                         test_ok(false);
