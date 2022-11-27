@@ -346,12 +346,26 @@
 #define MONI_BIT_RSV_14 (14)
 #define MONI_BIT_RSV_15 (15)
 
+/*
+ * Data structure for loop back test
+ *
+ * in_ctrl_reg: control register to set as INPUT
+ * out_ctrl_reg: control register to change HI/LOW
+ * in_moni_reg: monitor register to read INPUT status
+ * moni_bitpos: bit position in monitor register
+ */
+struct loopback_test_regs
+{
+	uint32_t in_ctrl_reg;
+	uint32_t out_ctrl_reg;
+	uint32_t in_moni_reg;
+	uint8_t moni_bitpos;
+};
+
 void set_test_gpio_mode(uint32_t addr, uint32_t mode);
 uint32_t get_test_gpio_mode(uint32_t addr);
 uint32_t get_test_moni_status(uint32_t addr, uint8_t bitpos);
-uint32_t test_paired_pins_connection(
-		uint32_t in_ctrl_addr, uint32_t out_ctrl_addr,
-	       	uint32_t in_moni_addr, uint8_t moni_bitpos);
+uint32_t test_paired_pins_connection(struct loopback_test_regs *target);
 
 
 static inline void set_pin_input(uint32_t offset)

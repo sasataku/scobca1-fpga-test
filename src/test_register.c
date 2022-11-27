@@ -25,40 +25,36 @@ void set_test_gpio_mode(uint32_t addr_offset, uint32_t mode)
 /*
  * BEFORE TESTING, Connect two test pins together to check crack.
  * It checks when toggling the level of the first pin, if another follows
+ *
  */
-uint32_t test_paired_pins_connection(
-		uint32_t in_ctrl_addr, // control register to set as INPUT
-		uint32_t out_ctrl_addr, // control register to change HI/LOW
-		uint32_t in_moni_addr, // monitor register to read INPUT status
-		uint8_t moni_pos // bit position in monitor register
-		)
+uint32_t test_paired_pins_connection(struct loopback_test_regs* target)
 {
 	int err_num = 0;
 
-	uint32_t old_in_mode = get_test_gpio_mode(in_ctrl_addr);
-	uint32_t old_out_mode = get_test_gpio_mode(out_ctrl_addr);
+	uint32_t old_in_mode = get_test_gpio_mode(target->in_ctrl_reg);
+	uint32_t old_out_mode = get_test_gpio_mode(target->out_ctrl_reg);
 
 	// control first one and use it as an input
-	set_test_gpio_mode(in_ctrl_addr, TEST_GPIO_IN);
+	set_test_gpio_mode(target->in_ctrl_reg, TEST_GPIO_IN);
 
-	set_test_gpio_mode(out_ctrl_addr, TEST_GPIO_OUT_HIGH);
-	if(!(get_test_moni_status(in_moni_addr, moni_pos))){
+	set_test_gpio_mode(target->out_ctrl_reg, TEST_GPIO_OUT_HIGH);
+	if(!(get_test_moni_status(target->in_moni_reg, target->moni_bitpos))){
 		err_num++;
 	}
 
-	set_test_gpio_mode(out_ctrl_addr, TEST_GPIO_OUT_LOW);
-	if(get_test_moni_status(in_moni_addr, moni_pos)){
+	set_test_gpio_mode(target->out_ctrl_reg, TEST_GPIO_OUT_LOW);
+	if(get_test_moni_status(target->in_moni_reg, target->moni_bitpos)){
 		err_num++;
 	}
 
 	// it's not necessary but to make sure, testing one more time
-	set_test_gpio_mode(out_ctrl_addr, TEST_GPIO_OUT_HIGH);
-	if(!(get_test_moni_status(in_moni_addr, moni_pos))){
+	set_test_gpio_mode(target->out_ctrl_reg, TEST_GPIO_OUT_HIGH);
+	if(!(get_test_moni_status(target->in_moni_reg, target->moni_bitpos))){
 		err_num++;
 	}
 
-	set_test_gpio_mode(in_ctrl_addr, old_in_mode);
-	set_test_gpio_mode(out_ctrl_addr, old_out_mode);
+	set_test_gpio_mode(target->in_ctrl_reg, old_in_mode);
+	set_test_gpio_mode(target->out_ctrl_reg, old_out_mode);
 
 	return err_num;
 }
