@@ -24,14 +24,14 @@ static bool qspi_select_mem(uint32_t base, uint8_t mem_no, uint32_t *spi_ss)
 		if (mem_no == QSPI_DATA_MEM0) {
 			debug("* [#0] Select Config Memory 0\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00);
-			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00, REG_READ_RETRY(10))) {
+			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00, REG_READ_RETRY(10000))) {
 				err("  !!! Can not select Config Memory %d\n", mem_no);
 				return false;
 			}
 		} else {
 			debug("* [#0] Select Config Memory 1\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x10);
-			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x30, REG_READ_RETRY(10))) {
+			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x30, REG_READ_RETRY(10000))) {
 				err("  !!! Can not select Config Memory %d\n", mem_no);
 				return false;
 			}
