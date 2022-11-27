@@ -137,6 +137,26 @@ static uint32_t test_trch_cfg_mem_sel(void)
 	return err_count;
 }
 
+void set_pin_input(uint32_t offset)
+{
+	sys_write32(TEST_GPIO_IN, TEST_REG_ADDR(offset));
+}
+
+void set_pin_output_low(uint32_t offset)
+{
+	sys_write32(TEST_GPIO_OUT_LOW, TEST_REG_ADDR(offset));
+}
+
+void set_pin_output_high(uint32_t offset)
+{
+	sys_write32(TEST_GPIO_OUT_HIGH, TEST_REG_ADDR(offset));
+}
+
+uint32_t get_pin(uint32_t offset, uint8_t bit)
+{
+	return !!(sys_read32(TEST_REG_ADDR(offset)) & (1 << bit));
+}
+
 static uint32_t test_fpga_boot0(void)
 {
 	uint8_t data;
