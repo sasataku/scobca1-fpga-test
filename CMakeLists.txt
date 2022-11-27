@@ -27,7 +27,11 @@ target_sources(app PRIVATE src/sram_byte_crack_test.c)
 target_sources(app PRIVATE src/sram_err_crack_test.c)
 target_sources(app PRIVATE src/sram_data_crack_test.c)
 target_sources(app PRIVATE src/user_io_bridge_test.c)
+<<<<<<< HEAD
 target_sources(app PRIVATE src/memory_bridge_test.c)
+=======
+target_sources(app PRIVATE src/qspi_bridge_test.c)
+>>>>>>> ec0abd0 (Adding QSPI bridge test function)
 target_sources(app PRIVATE src/can_test.c)
 target_sources(app PRIVATE src/bhm_test.c)
 target_sources(app PRIVATE src/longrun_test.c)
