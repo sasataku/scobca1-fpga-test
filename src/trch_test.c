@@ -48,6 +48,11 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 
 	/* Read CAN ID */
 	recv_id = (sys_read32(SCOBCA1_FPGA_CAN_RMR1) & CAN_TXID1_BIT_MASK) >> CAN_TXID1_BIT_SHIFT;
+	if (recv_id != 'F') {
+		err("  !!! Assertion failed: Unexpected CAN ID %u, expecting 0x46", recv_id);
+		assert();
+		return -1;
+	}
 
 	/* Read CAN Packet data */
 	res = sys_read32(SCOBCA1_FPGA_CAN_RMR3) >> 24;
