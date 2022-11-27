@@ -31,10 +31,8 @@ static struct loopback_test_regs user_io_pairs[] =
 static uint32_t init_user_io_mode(void)
 {
     uint32_t err_count = 0;
-    int test_item_num =
-	    sizeof(user_io_pairs) / sizeof(struct loopback_test_regs);
 
-    for(int i = 0; i < test_item_num; i++){
+    for(int i = 0; i < ARRAY_SIZE(user_io_pairs); i++){
 		struct loopback_test_regs *pair = &user_io_pairs[i];
         set_test_gpio_mode(pair->in_ctrl_reg, TEST_GPIO_IN);
 		set_test_gpio_mode(pair->out_ctrl_reg, TEST_GPIO_OUT_LOW);
@@ -49,10 +47,8 @@ static uint32_t init_user_io_mode(void)
 static uint32_t check_others_unchanged(const struct loopback_test_regs *self_pair)
 {
     uint32_t err_count = 0;
-    int test_item_num =
-	    sizeof(user_io_pairs) / sizeof(struct loopback_test_regs);
 
-    for(int i = 0; i < test_item_num; i++){
+    for(int i = 0; i < ARRAY_SIZE(user_io_pairs); i++){
 		struct loopback_test_regs *pair = &user_io_pairs[i];
 		if(self_pair->out_ctrl_reg == pair->out_ctrl_reg){
 			continue; // self
@@ -81,10 +77,7 @@ uint32_t user_io_bridge_test(uint32_t test_no)
     info("* Start User IO Bridge Test\n");
     int err_count = init_user_io_mode();
 
-    int test_item_num =
-	    sizeof(user_io_pairs) / sizeof(struct loopback_test_regs);
-
-    for(int i = 0; i < test_item_num; i++){
+    for(int i = 0; i < ARRAY_SIZE(user_io_pairs); i++){
 	    struct loopback_test_regs *pair = &user_io_pairs[i];
 
         // Set High and check self and others

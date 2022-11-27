@@ -42,11 +42,7 @@ uint32_t user_io_crack_test(uint32_t test_no)
     info("*** User IO crack test starts ***\n");
     uint32_t err_count = 0;
 
-    /* control UIO2 and use UIO1 as an input (default) */
-    uint32_t test_item_num =
-               sizeof(user_io_pairs) / sizeof(struct loopback_test_regs);
-
-    for(int i = 0; i < test_item_num; i++){
+    for(int i = 0; i < ARRAY_SIZE(user_io_pairs); i++){
         err_count += test_paired_pins_connection(&user_io_pairs[i]);
     }
     info("*** test done, error count: %d ***\n", err_count);
