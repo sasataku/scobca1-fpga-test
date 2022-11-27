@@ -118,8 +118,18 @@ static int32_t check_others_unchanged(uint32_t self_index)
 
 uint32_t memory_bridge_test(uint32_t test_no)
 {
+	/*
+	 * This test is to check bridge between all target pins.
+	 *
+	 * 1. set all test target pins to input mode and save init status
+	 * 2. select one pin to set high output and monitor if it's high
+	 * 3. check all other pins if they stay init status
+	 * 4. set the pin low output and doing same when setting high.
+	 * 5. go back to 2. until all pins are tested
+	 */
+
 	int err_count = 0;
-	info("* Start Bridge Test\n");
+	info("* Start Memory Bridge Test\n");
 	setup_memory_bridge_test();
 
 	for(int i = 0; i < ARRAY_SIZE(memory_targets); i++){
