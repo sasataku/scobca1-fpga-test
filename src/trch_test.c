@@ -197,8 +197,35 @@ static uint32_t test_fpga_boot0(void)
 
 static uint32_t test_fpga_boot1(void)
 {
-	uint32_t err_count = 0;
-	return err_count;
+	uint8_t data;
+	uint8_t tris;
+	uint32_t first;
+	uint32_t second;
+	uint32_t reg;
+
+	/* setup */
+	data = get_porta();
+	tris = get_trisa();
+	reg = sys_read32(TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT1));
+
+	/* test */
+	set_pin_input(TEST_CTRL_TRCH_FPGA_BOOT1);
+	set_trisa(set_out(tris, FPGA_BOOT1));
+
+	set_porta(set_high(data, FPGA_BOOT1));
+	first = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_BOOT1);
+
+	set_porta(set_low(data, FPGA_BOOT1));
+	second = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_BOOT1);
+
+	/* restore */
+	set_porta(data);
+	set_trisa(tris);
+	sys_write32(reg, TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT1));
+
+	info("* FPGA_BOOT1: error %d\n", first == second);
+
+	return first == second;
 }
 
 static uint32_t test_fpga_program_b(void)
