@@ -5,6 +5,7 @@
  */
 
 #include "common.h"
+#include "test_register.h"
 #include "sram_err_crack_test.h"
 
 #define HRMEM_REG_BASE 0x40500000
@@ -20,67 +21,57 @@
 
 uint32_t sram_err_crack_test(uint32_t test_no)
 {
-	/*
-	 * Test to check if ECC error signal connection is OK.
-	 * Clear ECC error counter at first, then read some SRAM addr
-	 * where never accessed after boot. It causes ECC error.
-	 * Ckeck if error count increases
-	 * To see SRAM1 and 2 error each, use 16bit access
-	 */
+    /*
+     * Test the connection of ECC error signal
+     * Clear ECC error latch register for SRAM1 and 2 at first,
+     * then read some lower and higher SRAM addr where never
+     * accessed after boot. It causes ECC error for SRAM1 and 2.
+     * Ckeck error latch register status to confirm it.
+     */
 
-	info("*** SRAM ECC err crack test starts ***\n");
-	uint32_t err_count = 0;
-	const uint32_t max_test_count = 5;
+    info("*** SRAM ECC err crack test starts ***\n");
+    uint32_t err_count = 0;
+    const uint32_t max_test_count = 5;
 
-	// clear ECC error count
-	write32(ECCERRCNTCLRR_REG, 0x1);
+    // SRAM 1 Test
+    write32(TEST_MONI_SRAM_ERR, 0x0);
 
-	if(read32(ECC1ERR_CNTR_REG)){
-		// couldn't reset the counter
-		info("Couldn't clear ECC error counter, %d\n",
-				read32(ECC1ERR_CNTR_REG));
-		err_count++;
-	    info("*** test done, error count: %u ***\n", err_count);
-		return err_count;
-	}
+    if(get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM1_ERR)){
+        info("Couldn't clear SRAM1 ERR\n");
+        return ++err_count;
+    }
 
-	// Test lower addr
-	mem_addr_t test_addr = TEST_START_ADDR;
-	int test_count = 0;
-	for(; test_count < max_test_count; test_count++){
-		sys_read16(test_addr);
-		if(read32(ECC1ERR_CNTR_REG)){
-			break;
-		}
-		test_addr += TEST_SKIP_ADDR;
-	}
-	if(test_count == max_test_count) err_count++;
+    mem_addr_t test_addr = TEST_START_ADDR;
+    int test_count = 0;
+    for(; test_count < max_test_count; test_count++){
+        sys_read16(test_addr);
+        if(get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM1_ERR)){
+            break;
+        }
+        test_addr += TEST_SKIP_ADDR;
+    }
+    if(test_count == max_test_count) err_count++;
 
-	// clear ECC error count
-	write32(ECCERRCNTCLRR_REG, 0x1);
+    // SRAM 2 Test
+    write32(TEST_MONI_SRAM_ERR, 0x0);
 
-	if(read32(ECC1ERR_CNTR_REG)){
-		// couldn't reset the counter
-		info("Couldn't clear ECC error counter, %d\n",
-				read32(ECC1ERR_CNTR_REG));
-		err_count++;
-	    info("*** test done, error count: %u ***\n", err_count);
-		return err_count;
-	}
+    if(get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM2_ERR)){
+        info("Couldn't clear SRAM2 ERR\n");
+        return ++err_count;
+    }
 
-	// Test higher addr
-	test_addr = TEST_START_ADDR;
-	test_count = 0;
-	for(; test_count < max_test_count; test_count++){
-		sys_read16(test_addr + HALFWORD_OFFSET);
-		if(read32(ECC1ERR_CNTR_REG)){
-			break;
-		}
-		test_addr += TEST_SKIP_ADDR;
-	}
-	if(test_count == max_test_count) err_count++;
+    test_addr = TEST_START_ADDR;
+    test_count = 0;
+    for(; test_count < max_test_count; test_count++){
+        sys_read16(test_addr + HALFWORD_OFFSET);
+        if(get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM2_ERR)){
+            break;
+        }
+        test_addr += TEST_SKIP_ADDR;
+    }
+    if(test_count == max_test_count) err_count++;
 
-	info("*** test done, error count: %u ***\n", err_count);
+    info("*** test done, error count: %u ***\n", err_count);
 
-	return err_count;
+    return err_count;
 }
