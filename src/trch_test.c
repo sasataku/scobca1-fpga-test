@@ -18,7 +18,9 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 	int32_t timeout_us = 1000000;
 	uint32_t recv_id;
 	uint32_t recv_size;
-	uint8_t res;
+	uint16_t res;
+	uint8_t res_code;
+	uint8_t res_val;
 
 	can_data[0] = cmd;
 	can_data[1] = arg;
@@ -41,8 +43,8 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 
 	/* Read CAN Packet size */
 	recv_size = sys_read32(SCOBCA1_FPGA_CAN_RMR2);
-	if (recv_size != 1) {
-		err("  !!! Assertion failed: Invalid CAN Packet size %u, expecting 1\n", recv_size);
+	if (recv_size > 2) {
+		err("  !!! Assertion failed: Invalid CAN Packet size %u, expecting <= 2\n", recv_size);
 		assert();
 		return -1;
 	}
@@ -56,10 +58,12 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 	}
 
 	/* Read CAN Packet data */
-	res = sys_read32(SCOBCA1_FPGA_CAN_RMR3) >> 24;
-	debug("* Received %02x from ID %02x\n", res, recv_id);
+	res = sys_read32(SCOBCA1_FPGA_CAN_RMR3) >> 16;
+	res_code = res >> 8;
+	res_val = res & 0xff;
+	debug("* Received 0x%02x 0x%02x from FPGA 0x%02x\n", res_code, res_val, recv_id);
 
-	return (int)res;
+	return (int)res_val;
 }
 
 #define PORT_LEVEL_HIGH 1
