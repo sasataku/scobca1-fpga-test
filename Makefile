@@ -52,6 +52,10 @@ erase:
 reset:
 	$(IPECMD) -P$(DEVICE) -T$(TARGET) -OK -OL
 
+.PHONY: halt
+halt:
+	$(IPECMD) -P$(DEVICE) -T$(TARGET) -OK
+
 .PHONY: clean
 clean:
 	$(RM) $(CF)
