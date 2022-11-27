@@ -230,8 +230,8 @@ static uint32_t test_fpga_boot1(void)
 
 static uint32_t test_fpga_program_b(void)
 {
-	uint32_t err_count = 0;
-	return err_count;
+	/* this pin must be tested before the FPGA is ON */
+	return 0;
 }
 
 static uint32_t test_fpga_init_b(void)
