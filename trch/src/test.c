@@ -193,18 +193,19 @@ static void can_enable_rx_fifo(void)
 
 #define DLC_MASK (0xf)
 
-static void spi_send(uint8_t *buf, uint8_t len, uint16_t sid)
+#define ASCII_NUL  0
+#define ASCII_SOH  1
+#define ASCII_STX  2
+#define ASCII_ETX  3
+#define ASCII_EOT  4
+#define ASCII_ENQ  5
+#define ASCII_ACK  6
+
+static void spi_send(uint32_t *buf, uint8_t len, uint16_t sid)
 {
         uint16_t addr;
-
-        /*
-          C1FIFOSTA1 を読み出し、FIFOに空きがあることを確認(TFNRFNIF==1)
-          C1FIFOUA1 を読み出し、送信FIFOのアドレスを取得
-          0x400 + アドレス + 0 にCAN IDを書き込み
-          0x400 + アドレス + 4 にDLCなどを書き込み
-          0x400 + アドレス + 8 以降に送信データを書き込み
-          C1FIFOCON2 のTXREQとUINCを1にして書き込み(転送を開始し、FIFOを進める)
-        */
+        uint32_t data;
+        uint8_t *p = (uint8_t *)&data;
 
         printf("C1FIFOSTA1 %08lx\n", spi_read32(C1FIFOSTA1));
 
@@ -228,13 +229,22 @@ static void spi_send(uint8_t *buf, uint8_t len, uint16_t sid)
 
 void test_ok(bool ok)
 {
-        uint8_t buf = ok;
-        spi_send(&buf, 1, CAN_ID_FPGA);
+        uint32_t buf;
+        uint8_t *data = (uint8_t*)&buf;
+
+        data[0] = ASCII_ACK;
+        data[1] = ok;
+        spi_send(&buf, 2, CAN_ID_FPGA);
 }
 
 void test_send(uint8_t val)
 {
-        spi_send(&val, 1, CAN_ID_FPGA);
+        uint32_t buf;
+        uint8_t *data = (uint8_t*)&buf;
+
+        data[0] = 'p';
+        data[1] = val;
+        spi_send(&buf, 2, CAN_ID_FPGA);
 }
 
 static void can_setup_filter(uint16_t sid, uint16_t sid_mask)

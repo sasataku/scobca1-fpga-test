@@ -39,6 +39,7 @@ $(PRGDAT).hex: $(OBJS)
 %.p1: %.c Makefile
 	$(CC) $(CONFIGS) -c -o $@ $<
 
+flash: program
 .PHONY: program
 program: $(PRGDAT).hex
 	$(IPECMD) -P$(DEVICE) -T$(TARGET) -F$< -M -OL
@@ -46,6 +47,14 @@ program: $(PRGDAT).hex
 .PHONY: erase
 erase:
 	$(IPECMD) -P$(DEVICE) -T$(TARGET) -E
+
+.PHONY: reset
+reset:
+	$(IPECMD) -P$(DEVICE) -T$(TARGET) -OK -OL
+
+.PHONY: halt
+halt:
+	$(IPECMD) -P$(DEVICE) -T$(TARGET) -OK
 
 .PHONY: clean
 clean:
