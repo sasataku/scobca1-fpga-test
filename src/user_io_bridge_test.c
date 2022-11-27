@@ -28,7 +28,7 @@ static struct loopback_test_regs user_io_pairs[] =
     { TEST_CTRL_UIO2_15, TEST_CTRL_UIO1_15 ,TEST_MONI_USER_IO2, MONI_BIT_UIO2_15 },
 };
 
-uint32_t init_user_io_mode(void)
+static uint32_t init_user_io_mode(void)
 {
     uint32_t err_count = 0;
     int test_item_num =
@@ -46,7 +46,7 @@ uint32_t init_user_io_mode(void)
     return err_count;
 }
 
-uint32_t check_others_unchanged(const struct loopback_test_regs *self_pair)
+static uint32_t check_others_unchanged(const struct loopback_test_regs *self_pair)
 {
     uint32_t err_count = 0;
     int test_item_num =
