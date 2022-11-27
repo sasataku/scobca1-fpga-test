@@ -120,10 +120,9 @@ void do_active(void)
         r = spi_recv(cmd, 2);
         if (r > 0) {
                 if (r == 1)
-                        printf("Got cmd %d 0x%x\n", cmd[0], cmd[0]);
+                        printf("Got cmd 0x%x\n", cmd[0]);
                 if (r == 2)
-                        printf("Got cmd %d 0x%x arg %d 0x%x\n",
-                               cmd[0], cmd[0], cmd[1], cmd[1]);
+                        printf("Got cmd 0x%x arg 0x%x\n", cmd[0], cmd[1]);
                 switch (cmd[0]) {
                 case 0:
                         ok = do_cmd1();
