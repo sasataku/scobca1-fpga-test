@@ -26,9 +26,9 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 	can_data[1] = arg;
 
 	if (has_arg)
-		debug("* Sending  0x%02x 0x%02x to ID 0x%02x ('%c')\n", can_data[0], can_data[1], can_id, can_id);
+		debug("*  Sending  0x%02x 0x%02x to ID 0x%02x ('%c')\n", can_data[0], can_data[1], can_id, can_id);
 	else
-		debug("* Sending 0x%02x to ID 0x%02x ('%c')\n", can_data[0], can_id, can_id);
+		debug("*  Sending  0x%02x to ID 0x%02x ('%c')\n", can_data[0], can_id, can_id);
 
 	if (!can_send(can_id, can_data, has_arg ? 2 : 1)) {
 		assert();
@@ -61,7 +61,7 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 	res = sys_read32(SCOBCA1_FPGA_CAN_RMR3) >> 16;
 	res_code = res >> 8;
 	res_val = res & 0xff;
-	debug("* Received 0x%02x 0x%02x from FPGA 0x%02x\n", res_code, res_val, recv_id);
+	debug("*  Received 0x%02x 0x%02x from FPGA 0x%02x\n", res_code, res_val, recv_id);
 
 	return (int)res_val;
 }
@@ -172,9 +172,7 @@ static uint32_t test_fpga_boot0(void)
 
 	/* setup */
 	data = get_porta();
-	printk("PORT A %02x\n", data);
 	tris = get_trisa();
-	printk("TRIS A %02x\n", tris);
 	reg = sys_read32(TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT0));
 
 	/* test */
@@ -191,6 +189,8 @@ static uint32_t test_fpga_boot0(void)
 	set_porta(data);
 	set_trisa(tris);
 	sys_write32(reg, TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT0));
+
+	info("* FPGA_BOOT0: error %d\n", first == second);
 
 	return first == second;
 }
