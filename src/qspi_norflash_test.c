@@ -24,14 +24,14 @@ static bool qspi_select_mem(uint32_t base, uint8_t mem_no, uint32_t *spi_ss)
 		if (mem_no == QSPI_DATA_MEM0) {
 			debug("* [#0] Select Config Memory 0\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00);
-			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00, REG_READ_RETRY(10000))) {
+			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x00, REG_READ_RETRY(100000))) {
 				err("  !!! Can not select Config Memory %d\n", mem_no);
 				return false;
 			}
 		} else {
 			debug("* [#0] Select Config Memory 1\n");
 			write32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x10);
-			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x30, REG_READ_RETRY(10000))) {
+			if (!assert32(SCOBCA1_FPGA_SYSREG_CFGMEMCTL, 0x30, REG_READ_RETRY(100000))) {
 				err("  !!! Can not select Config Memory %d\n", mem_no);
 				return false;
 			}
@@ -804,8 +804,6 @@ static uint32_t qspi_norflash_test(uint32_t test_no, uint32_t base)
 	}
 	start_val_0 = qspi_create_fifo_data(start_val_0, write_data_0, QSPI_RX_FIFO_MAX_BYTE, false);
 	start_val_1 = qspi_create_fifo_data(start_val_1, write_data_1, QSPI_RX_FIFO_MAX_BYTE, false);
-
-	info("* [%d] Start QSPI Memory Test (only 16byte)\n", test_no);
 
 	info("* [%d-1] Start QSPI Memory [0]: Erase Test (Sector)\n", test_no);
 	if (!qspi_norflash_erase(base, QSPI_DATA_MEM0, QSPI_ERASE_SECTOR,
