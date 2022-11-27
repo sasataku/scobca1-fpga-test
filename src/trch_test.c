@@ -23,9 +23,9 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 	can_data[1] = arg;
 
 	if (has_arg)
-		debug("* Sending  0x%02x 0x%02x to ID 0x%02x\n", can_data[0], can_data[1], can_id);
+		debug("* Sending  0x%02x 0x%02x to ID 0x%02x ('%c')\n", can_data[0], can_data[1], can_id, can_id);
 	else
-		debug("* Sending 0x%02x to ID 0x%02x\n", can_data[0], can_id);
+		debug("* Sending 0x%02x to ID 0x%02x ('%c')\n", can_data[0], can_id, can_id);
 
 	if (!can_send(can_id, can_data, has_arg ? 2 : 1)) {
 		assert();
