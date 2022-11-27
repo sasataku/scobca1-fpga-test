@@ -153,6 +153,7 @@
 /* Monitor Registers */
 #define TEST_MONI_SRAM        (0x0078)
 #define TEST_MONI_SRAM_ERR    (0x007C)
+#define TEST_MONI_SRAM_IO     (0x0080)
 #define TEST_MONI_CFG_MEM     (0x0114)
 #define TEST_MONI_DATA_MEM    (0x0228)
 #define TEST_MONI_FRAM        (0x0328)
@@ -202,6 +203,10 @@
 #define MONI_BIT_SRAM2_BLE_B (0)
 
 // SRAM ECC error
+#define MONI_BIT_SRAM1_ERR   (0)
+#define MONI_BIT_SRAM2_ERR   (1)
+
+// SRAM IO
 #define MONI_BIT_SRAM1_ERR   (0)
 #define MONI_BIT_SRAM2_ERR   (1)
 

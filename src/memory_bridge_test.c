@@ -7,8 +7,6 @@
 #include "common.h"
 #include "bridge_test.h"
 
-#define TEST_CTRL_INVALIED (0xFFFFFFFF)
-
 static struct bridge_test_regs memory_targets[] =
 {
 	// SRAM
@@ -75,6 +73,9 @@ static struct bridge_test_regs memory_targets[] =
 	{ TEST_CTRL_FRAM2_IO0, TEST_MONI_FRAM, MONI_BIT_FRAM2_IO0, CTRL, 0, 0 },
 };
 
+static uint32_t sram_err_init_status;
+static uint32_t sram_io_init_status;
+
 static void setup_memory_bridge_test(void)
 {
 	// set all test pins to GPIO IN mode and store default status
@@ -86,6 +87,9 @@ static void setup_memory_bridge_test(void)
 		target->init_status = get_test_moni_status(
 						target->moni_offset, target->moni_bitpos);
 	}
+
+	sram_err_init_status = (read32(TEST_REG_ADDR(TEST_MONI_SRAM_ERR)) & 0x3);
+	sram_io_init_status = read32(TEST_REG_ADDR(TEST_MONI_SRAM_IO));
 }
 
 static void cleanup_memory_bridge_test(void)
@@ -98,7 +102,29 @@ static void cleanup_memory_bridge_test(void)
 	}
 }
 
-static int32_t check_others_unchanged(uint32_t self_index)
+static uint32_t check_sram_err_unchanged()
+{
+	uint32_t err_count = 0;
+
+	if(sram_err_init_status != (read32(TEST_REG_ADDR(TEST_MONI_SRAM_ERR)) & 0x3)){
+		return ++err_count;
+	}
+
+	return err_count;
+}
+
+static uint32_t check_sram_io_unchanged()
+{
+	uint32_t err_count = 0;
+
+	if(sram_io_init_status != read32(TEST_REG_ADDR(TEST_MONI_SRAM_IO))){
+		return ++err_count;
+	}
+
+	return err_count;
+}
+
+static uint32_t check_others_unchanged(uint32_t self_index)
 {
 	// check if each status is same as default status except current target
 	uint32_t err_count = 0;
@@ -112,6 +138,9 @@ static int32_t check_others_unchanged(uint32_t self_index)
 			err_count++;
 		}
 	}
+
+	err_count += check_sram_err_unchanged();
+	err_count += check_sram_io_unchanged();
 
 	return err_count;
 }
