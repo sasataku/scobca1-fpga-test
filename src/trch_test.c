@@ -107,6 +107,11 @@ uint8_t set_trisc(uint8_t val) { return send_cmd_to_trch('V', val, true); }
 uint8_t set_trisd(uint8_t val) { return send_cmd_to_trch('W', val, true); }
 uint8_t set_trise(uint8_t val) { return send_cmd_to_trch('X', val, true); }
 
+uint8_t set_out (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
+uint8_t set_in  (uint8_t val, uint8_t bit) { return val |  (1 << bit); }
+uint8_t set_low (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
+uint8_t set_high(uint8_t val, uint8_t bit) { return val |  (1 << bit); }
+
 /*
  * TRCH_CFG_MEM_SEL
  * PortA 0 / RA0
