@@ -39,6 +39,7 @@ $(PRGDAT).hex: $(OBJS)
 %.p1: %.c Makefile
 	$(CC) $(CONFIGS) -c -o $@ $<
 
+flash: program
 .PHONY: program
 program: $(PRGDAT).hex
 	$(IPECMD) -P$(DEVICE) -T$(TARGET) -F$< -M -OL
