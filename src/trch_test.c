@@ -9,6 +9,7 @@
 
 #include "common.h"
 #include "can.h"
+#include "test_register.h"
 
 static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 {
@@ -66,12 +67,12 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 #define PORT_DIR_OUT 0
 #define PORT_DIR_IN 1
 
-#define TRCH_CONFIG_MEM_SEL BIT(0)
-#define FPGA_BOOT0          BIT(1)
-#define FPGA_BOOT1          BIT(2)
-#define FPGA_PROGRAM_B      BIT(3)
-#define FPGA_INIT_B         BIT(4)
-#define FPGAPWR_EN          BIT(5)
+#define TRCH_CONFIG_MEM_SEL (0)
+#define FPGA_BOOT0          (1)
+#define FPGA_BOOT1          (2)
+#define FPGA_PROGRAM_B      (3)
+#define FPGA_INIT_B         (4)
+#define FPGAPWR_EN          (5)
 
 /* port 0011 1010 */
 /* tris 0001 1000 */
@@ -161,27 +162,31 @@ static uint32_t test_fpga_boot0(void)
 {
 	uint8_t data;
 	uint8_t tris;
-	uint8_t first;
-	uint8_t second;
+	uint32_t first;
+	uint32_t second;
+	uint32_t reg;
 
 	/* setup */
 	data = get_porta();
 	printk("PORT A %02x\n", data);
 	tris = get_trisa();
 	printk("TRIS A %02x\n", tris);
+	reg = sys_read32(TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT0));
 
 	/* test */
-	set_porta(data | FPGA_BOOT0);
-	first = get_porta();
-	printk("FPGA_BOOT0 (1) %02x\n", first);
+	set_pin_input(TEST_CTRL_TRCH_FPGA_BOOT0);
+	set_trisa(set_out(tris, FPGA_BOOT0));
 
-	set_porta(data & ~FPGA_BOOT0);
-	second = get_porta();
-	printk("FPGA_BOOT0 (2) %02x\n", second);
+	set_porta(set_high(data, FPGA_BOOT0));
+	first = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_BOOT0);
+
+	set_porta(set_low(data, FPGA_BOOT0));
+	second = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_BOOT0);
 
 	/* restore */
 	set_porta(data);
 	set_trisa(tris);
+	sys_write32(reg, TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT0));
 
 	return first == second;
 }
