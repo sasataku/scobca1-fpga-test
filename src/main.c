@@ -237,7 +237,7 @@ void main (void)
                         break;
 
                 case FPGA_STATE_ACTIVE:
-                        puts("Active");
+                        printf("Active %02x %02x %02x %02x %02x\n", PORTA, PORTB, PORTC, PORTD, PORTE);
                         do_active();
                         __delay_ms(500);
                         break;
