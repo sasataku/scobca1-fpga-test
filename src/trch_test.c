@@ -170,6 +170,8 @@ static uint32_t test_fpga_boot0(void)
 	uint32_t second;
 	uint32_t reg;
 
+	info("* FPGA_BOOT0: start\n");
+
 	/* setup */
 	data = trch_get_porta();
 	tris = trch_get_trisa();
@@ -202,6 +204,8 @@ static uint32_t test_fpga_boot1(void)
 	uint32_t first;
 	uint32_t second;
 	uint32_t reg;
+
+	info("* FPGA_BOOT1: start\n");
 
 	/* setup */
 	data = trch_get_porta();
