@@ -233,6 +233,8 @@ static void spi_send(uint32_t *buf, uint8_t len, uint16_t sid)
         //spi_write8(0, C1FIFOCON1 + 2);
 
         /* send it */
+        /* UINC and TXREQ of the CiFIFOCONm register must be set at
+         * the same time after appending a message. -- DS20005678E */
         spi_write8(TXREQ | UINC, C1FIFOCON1 + 1);
 }
 
