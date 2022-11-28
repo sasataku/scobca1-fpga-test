@@ -9,11 +9,9 @@
 
 #include <zephyr/kernel.h>
 
-//#define DEBUG (1)
-
 #define REG_READ_RETRY(count) (count)
 
-#ifdef DEBUG
+#ifdef CONFIG_DEBUG_PRINT
 #define debug(format, ...) printk(format, ##__VA_ARGS__)
 #else
 #define debug(format, ...)
