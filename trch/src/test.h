@@ -18,3 +18,4 @@ void prepare_can_test(void);
 uint8_t test_can(void);
 void test_ok(bool ok);
 void test_send(uint8_t val);
+void test_send_counter(uint8_t counter);

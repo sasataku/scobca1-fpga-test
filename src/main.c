@@ -325,6 +325,11 @@ void do_active(void)
                         ok = do_cmd1();
                         test_ok(ok);
                         break;
+
+                case ASCII_ENQ:
+                        test_send_counter(the_error_counter);
+                        break;
+
                 case 'a': val = get_port_a(); test_send(val); break;
                 case 'b': val = get_port_b(); test_send(val); break;
                 case 'c': val = get_port_c(); test_send(val); break;

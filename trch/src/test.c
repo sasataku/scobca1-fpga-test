@@ -273,6 +273,16 @@ void test_send_to_analyzer(uint8_t val)
         spi_send(&buf, 2, CAN_ID_ANALYZER);
 }
 
+void test_send_counter(uint8_t counter)
+{
+        uint32_t buf;
+        uint8_t *data = (uint8_t*)&buf;
+
+        data[0] = 'x';
+        data[1] = counter;
+        spi_send(&buf, 2, CAN_ID_FPGA);
+}
+
 static void can_setup_filter(uint16_t sid, uint16_t sid_mask)
 {
         /* Disable the filter */
