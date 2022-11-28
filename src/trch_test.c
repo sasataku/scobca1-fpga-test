@@ -79,6 +79,7 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 #define FPGAPWR_EN          (5)
 
 #define FPGA_PWR_CYCLE_REQ  (1)
+#define FPGA_WATCHDOG       (4)
 
 /* port 0011 1010 */
 /* tris 0001 1000 */
@@ -255,10 +256,46 @@ static uint32_t test_fpga_pwr_cycle_req(void)
 	return first == second;
 }
 
+/*
+ * FPGA_WATCHDOG
+ * PortB 4 / RB4
+ * Dir: TRCH <- FPGA
+ *
+ * FPGA sends live pluses on the line.  Read the signal at TRCH side
+ * multiple times and see the signal is changing.
+ *
+ * The interval is default to 500 ms.  We have some delay at CAN and
+ * TRCH side so 500 ms is good value to wait.
+ *
+ * No setup should be needed for both sides.
+ */
 static uint32_t test_fpga_watchdog(void)
 {
-	uint32_t err_count = 0;
-	return err_count;
+	uint8_t first;
+	uint8_t second;
+	uint8_t third;
+	uint8_t fourth;
+
+	info("* FPGA_WATCHDOG: start\n");
+
+	/* setup: None */
+
+	/* test */
+	first = get_bit(trch_get_portb(), FPGA_WATCHDOG);
+	k_msleep(500);
+	second = get_bit(trch_get_portb(), FPGA_WATCHDOG);
+	k_msleep(500);
+	third = get_bit(trch_get_portb(), FPGA_WATCHDOG);
+	k_msleep(500);
+	fourth = get_bit(trch_get_portb(), FPGA_WATCHDOG);
+
+	debug("*  FPGA_WATCHDOG: %x %x %x %x\n", first, second, third, fourth);
+
+	/* restore: None */
+
+	info("* FPGA_WATCHDOG: error %d\n", (first == second) && (first == third) && (first == fourth));
+
+	return (first == second) && (first == third) && (first == fourth);
 }
 
 static uint32_t test_fpga_reserve(void)
