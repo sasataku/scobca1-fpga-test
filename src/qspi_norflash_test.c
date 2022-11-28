@@ -7,6 +7,8 @@
 #include "system_reg.h"
 #include "qspi_common.h"
 #include "common.h"
+#include "can.h"
+#include "trch_test.h"
 
 #define QSPI_NOR_FLASH_MEM_ADDR_SIZE (3u)
 #define QSPI_DATA_MEM0_SS (0x01)
@@ -16,6 +18,9 @@
 #define QSPI_RX_FIFO_MAX_BYTE (16u)
 #define QSPI_NOR_FLASH_DUMMY_CYCLE_COUNT (4u)
 #define QSPI_SPI_MODE_QUAD (0x00020000)
+
+#define TRCH_CFG_MEM_MONI_BIT   (2u)   /* TRCH RB2 */
+#define TRCH_CFG_MEM_MONI_MASK  (0x04)
 
 static bool qspi_select_mem(uint32_t base, uint8_t mem_no, uint32_t *spi_ss)
 {
@@ -1037,6 +1042,88 @@ end_of_test:
 	return err_cnt;
 }
 
+static bool verify_trch_cfg_mem_moni(bool is_hi)
+{
+	uint8_t portb_data;
+	bool cfg_mem_moni;
+
+	portb_data = send_cmd_to_trch('b', 0, false);
+	if (portb_data < 0) {
+		assert();
+		return false;
+	}
+
+	cfg_mem_moni = (bool)((portb_data & TRCH_CFG_MEM_MONI_MASK) >> TRCH_CFG_MEM_MONI_BIT);
+	if (cfg_mem_moni != is_hi) {
+		assert();
+		return false;
+	}
+
+	return true;
+}
+
+static bool qspi_config_memory_switch_memsel(uint32_t test_no)
+{
+	uint32_t base = SCOBCA1_FPGA_CFG_BASE_ADDR;
+	uint32_t spi_ss;
+	uint8_t subno = 1;
+	uint8_t cfg_mem[] = {QSPI_CFG_MEM1, QSPI_CFG_MEM0};
+	bool is_hi;
+
+	info("* [%d-%d] CAN initialize for communicate to TRCH\n", test_no, subno);
+	if (!can_init(false)) {
+		assert();
+	}
+	subno++;
+
+	for (uint8_t i=0; i<ARRAY_SIZE(cfg_mem); i++) {
+
+		info("* [%d-%d] Select Config Memory %d\n", test_no, subno, cfg_mem[i]);
+		if (!qspi_select_mem(base, QSPI_CFG_MEM1, &spi_ss)) {
+			assert();
+			return false;
+		}
+		subno++;
+
+		info("* [%d-%d] Active SPI SS\n", test_no, subno);
+		if (!activate_spi_ss(base, spi_ss)) {
+			assert();
+			return false;
+		}
+		subno++;
+
+		info("* [%d-%d] Monitor TRCH_CFG_MEM_MONI signal via TRCH (Expected: Active low)\n", test_no, subno);
+		is_hi = false;
+		if (!verify_trch_cfg_mem_moni(is_hi)) {
+			assert();
+			return false;
+		}
+		subno++;
+
+		info("* [%d-%d] Inactive SPI SS\n", test_no, subno);
+		if (!inactivate_spi_ss(base)) {
+			assert();
+			return false;
+		}
+		subno++;
+
+		info("* [%d-%d] Monitor TRCH_CFG_MEM_MONI signal via TRCH (Expected: Inactive Hi)\n", test_no, subno);
+		is_hi = true;
+		if (!verify_trch_cfg_mem_moni(is_hi)) {
+			assert();
+			return false;
+		}
+		subno++;
+	}
+
+	info("* [%d-%d] CAN terminating\n", test_no, subno);
+	if (!can_terminate(false)) {
+		assert();
+	}
+
+	return true;
+}
+
 uint32_t qspi_config_memory_test(uint32_t test_no)
 {
 	uint32_t err_cnt = 0;
@@ -1115,6 +1202,21 @@ uint32_t qspi_data_memory_block_test(uint32_t test_no)
 	info("* [%d] Start QSPI Data Memory Test (Block)\n", test_no);
 
 	err_cnt = qspi_norflash_block_test(test_no, base);
+
+	print_result(test_no, err_cnt);
+
+	return err_cnt;
+}
+
+uint32_t qspi_config_memory_trch_moni_test(uint32_t test_no)
+{
+	uint32_t err_cnt = 0;
+
+	info("* [%d] Start Config Memory TRCH_CFG_MEM_MONI Test\n", test_no);
+
+	if (!qspi_config_memory_switch_memsel(test_no)) {
+		err_cnt++;
+	}
 
 	print_result(test_no, err_cnt);
 
