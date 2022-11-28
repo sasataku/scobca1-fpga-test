@@ -78,6 +78,8 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 #define FPGA_INIT_B         (4)
 #define FPGAPWR_EN          (5)
 
+#define FPGA_PWR_CYCLE_REQ  (1)
+
 /* port 0011 1010 */
 /* tris 0001 1000 */
 
@@ -116,6 +118,7 @@ uint8_t set_out (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
 uint8_t set_in  (uint8_t val, uint8_t bit) { return val |  (1 << bit); }
 uint8_t set_low (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
 uint8_t set_high(uint8_t val, uint8_t bit) { return val |  (1 << bit); }
+uint8_t get_bit (uint8_t val, uint8_t bit) { return val &  (1 << bit); }
 
 /*
  * TRCH_CFG_MEM_SEL
@@ -244,10 +247,49 @@ static uint32_t test_fpga_init_b(void)
 	return 0;
 }
 
+/*
+ * FPGA_PWR_CYCLE_REQ
+ * PortB 1 / RB1
+ * Dir: TRCH <- FPGA
+ *
+ * This signal is used to inform TRCH that we want to restart with a
+ * power cycle.  The stock TRCH firmware will power cycle when this
+ * signal get HIGH.  But for this system, the functionality is
+ * removed.  Thus, no power cycle will happen regardless of this
+ * singal level.
+ */
 static uint32_t test_fpga_pwr_cycle_req(void)
 {
-	uint32_t err_count = 0;
-	return err_count;
+	uint8_t data;
+	uint8_t tris;
+	uint32_t first;
+	uint32_t second;
+	uint32_t reg;
+
+	info("* FPGA_PWR_CYCLE_REQ: start\n");
+
+	/* setup */
+	data = trch_get_portb();
+	tris = trch_get_trisb();
+	reg = sys_read32(TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_PWR_CYCLE_REQ));
+
+	/* test */
+	trch_set_trisb(set_in(tris, FPGA_PWR_CYCLE_REQ));
+
+	set_pin_output_high(TEST_CTRL_TRCH_FPGA_PWR_CYCLE_REQ);
+	first = get_bit(trch_get_portb(), FPGA_PWR_CYCLE_REQ);
+
+	set_pin_output_low(TEST_CTRL_TRCH_FPGA_PWR_CYCLE_REQ);
+	second = get_bit(trch_get_portb(), FPGA_PWR_CYCLE_REQ);
+
+	/* restore */
+	trch_set_portb(data);
+	trch_set_trisb(tris);
+	sys_write32(reg, TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_PWR_CYCLE_REQ));
+
+	info("* FPGA_PWR_CYCLE_REQ: error %d\n", first == second);
+
+	return first == second;
 }
 
 static uint32_t test_trch_cfg_mem_moni(void)
