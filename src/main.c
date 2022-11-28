@@ -429,6 +429,7 @@ void main (void)
                 case FPGA_STATE_POWER_OFF:
                         puts("Off");
                         activate_fpga = hold_fpgapwr_en();
+                        __delay_ms(100);
                         break;
 
                 case FPGA_STATE_POWER_UP:
