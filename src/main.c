@@ -159,6 +159,34 @@ void do_active(void)
         }
 }
 
+#ifndef CONFIG_FPGAPWR_HOLD_SEC
+#define CONFIG_FPGAPWR_HOLD_SEC (3)
+#endif
+#define FPGAPWR_HOLD_TIME (SEC_TO_TICKS(CONFIG_FPGAPWR_HOLD_SEC))
+
+enum FpgaGoal hold_fpgapwr_en(void)
+{
+        enum FpgaGoal ret = FPGA_SHUTDOWN;
+        static bool first_time = true;
+        static uint16_t first_time_tick;
+        uint16_t current_tick;
+
+        current_tick = (uint16_t)timer_get_ticks();
+
+        if (first_time) {
+                first_time = false;
+                first_time_tick = current_tick;
+        }
+        else {
+                if ((current_tick - first_time_tick) >= FPGAPWR_HOLD_TIME) {
+                        first_time = true;
+                        ret = FPGA_ACTIVATE;
+                }
+        }
+
+        return ret;
+}
+
 void main (void)
 {
         enum FpgaState fpga_state;
@@ -194,7 +222,7 @@ void main (void)
 
                 case FPGA_STATE_POWER_OFF:
                         puts("Off");
-                        activate_fpga = FPGA_ACTIVATE;
+                        activate_fpga = hold_fpgapwr_en();
                         break;
 
                 case FPGA_STATE_POWER_UP:
