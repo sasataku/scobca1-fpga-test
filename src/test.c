@@ -11,7 +11,7 @@
 #include "mcp2517fd.h"
 #include "utils.h"
 
-uint8_t expect(char *name, bool expect, bool val)
+static uint8_t expect(char *name, bool expect, bool val)
 {
         uint8_t ret = 0;
         printf("%s %s\n", name, expect == val ? "ok" : "ng");
@@ -20,7 +20,7 @@ uint8_t expect(char *name, bool expect, bool val)
         return ret;
 }
 
-void fail(char *name)
+static void fail(char *name)
 {
         printf("%s ng", name);
 }
