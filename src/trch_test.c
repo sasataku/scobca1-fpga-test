@@ -81,6 +81,8 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 #define FPGA_PWR_CYCLE_REQ  (1)
 #define FPGA_WATCHDOG       (4)
 
+#define FPGA_RESERVE        (7)
+
 /* port 0011 1010 */
 /* tris 0001 1000 */
 
@@ -298,10 +300,49 @@ static uint32_t test_fpga_watchdog(void)
 	return (first == second) && (first == third) && (first == fourth);
 }
 
+/*
+ * FPGA_RESERVE
+ * PortD 7 / RD7
+ * Dir: TRCH <-> FPGA
+ *
+ * This is reserved signal. No functionarity is assigned to it.
+ *
+ * To test it, we'll make the pin INPUT for FPGA and drive it from
+ * TRCH.
+ */
 static uint32_t test_fpga_reserve(void)
 {
-	uint32_t err_count = 0;
-	return err_count;
+	uint8_t data;
+	uint8_t tris;
+	uint32_t first;
+	uint32_t second;
+	uint32_t reg;
+
+	info("* FPGA_RESERVE: start\n");
+
+	/* setup */
+	data = trch_get_portd();
+	tris = trch_get_trisd();
+	reg = sys_read32(TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_RESERVE));
+
+	/* test */
+	set_pin_input(TEST_CTRL_TRCH_FPGA_RESERVE);
+	trch_set_trisd(set_out(tris, FPGA_RESERVE));
+
+	trch_set_portd(set_high(data, FPGA_RESERVE));
+	first = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_RESERVE);
+
+	trch_set_portd(set_low(data, FPGA_RESERVE));
+	second = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_RESERVE);
+
+	/* restore */
+	trch_set_portd(data);
+	trch_set_trisd(tris);
+	sys_write32(reg, TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_RESERVE));
+
+	info("* FPGA_RESERVE: error %d\n", first == second);
+
+	return first == second;
 }
 
 static uint32_t open_circuit_tests(void)
