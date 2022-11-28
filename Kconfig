@@ -17,6 +17,12 @@ config AUTO_RUN_TEST_NUMBER
 	help
 	  Specify a test number to run.
 
+config DEBUG_PRINT
+	bool "Enable debug log on FPGA test"
+	default n
+	help
+		Enable debug log on FPGA test
+
 menu "Zephyr"
 
 source "Kconfig.zephyr"
