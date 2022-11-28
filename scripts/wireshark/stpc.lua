@@ -18,6 +18,7 @@ protocol = Proto("STPC", "SC-OBC TRCH Port Control Protocol")
 CAN_ID = "84,70"
 
 CMD_TYPE = {
+   ENQ = 5,
    ACK = 6,
 
    GET_PORTA = string.byte("a"),
@@ -45,12 +46,14 @@ CMD_TYPE = {
    SET_TRISE = string.byte("X"),
 
    PORT_STATUS = string.byte("p"),
+   ERROR_COUNTER = string.byte("x"),
 }
 
 local f = protocol.fields
 
 f.cmd = ProtoField.uint8("stpc.cmd", "Command", base.HEX_DEC, {
 			    [CMD_TYPE.ACK]       = "Ack",
+			    [CMD_TYPE.ENQ]       = "Enquery Error Counter",
 
 			    [CMD_TYPE.GET_PORTA] = "Get Port A",
 			    [CMD_TYPE.GET_PORTB] = "Get Port B",
@@ -76,6 +79,7 @@ f.cmd = ProtoField.uint8("stpc.cmd", "Command", base.HEX_DEC, {
 			    [CMD_TYPE.SET_TRISD] = "Set TRIS D",
 			    [CMD_TYPE.SET_TRISE] = "Set TRIS E",
 			    [CMD_TYPE.PORT_STATUS] = "Port Status",
+			    [CMD_TYPE.ERROR_COUNTER] = "Error Counter",
 })
 f.arg = ProtoField.uint8("stpc.arg", "Argument", base.HEX_DEC)
 
