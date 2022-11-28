@@ -1,3 +1,5 @@
+#include "test.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -212,14 +214,6 @@ static void can_enable_rx_fifo(void)
 #define TXREQ BIT(1)
 
 #define DLC_MASK (0xf)
-
-#define ASCII_NUL  0
-#define ASCII_SOH  1
-#define ASCII_STX  2
-#define ASCII_ETX  3
-#define ASCII_EOT  4
-#define ASCII_ENQ  5
-#define ASCII_ACK  6
 
 static void spi_send(uint32_t *buf, uint8_t len, uint16_t sid)
 {

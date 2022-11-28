@@ -1,6 +1,16 @@
 #pragma once
 
-void expect(char *name, bool expect, bool val);
+#include <stdint.h>
+#include <stdbool.h>
+
+#define ASCII_NUL  0
+#define ASCII_SOH  1
+#define ASCII_STX  2
+#define ASCII_ETX  3
+#define ASCII_EOT  4
+#define ASCII_ENQ  5
+#define ASCII_ACK  6
+
 uint8_t test_trch_r269(void);
 uint8_t test_temp(void);
 uint8_t test_i2c_bridges(void);
