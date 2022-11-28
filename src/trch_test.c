@@ -120,31 +120,6 @@ uint8_t set_low (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
 uint8_t set_high(uint8_t val, uint8_t bit) { return val |  (1 << bit); }
 uint8_t get_bit (uint8_t val, uint8_t bit) { return val &  (1 << bit); }
 
-/*
- * TRCH_CFG_MEM_SEL
- * PortA 0 / RA0
- * Dir: TRCH -> FPGA
- *
- * This is a special signal.  TRCH actively picks up FPGA_CFG_MEM_SEL
- * and assert it to TRCH_CFG_MEM_SEL.  IOW, we don't need to anything
- * but change FPGA_CFG_MEM_SEL and compare them.
- */
-static uint32_t test_trch_cfg_mem_sel(void)
-{
-	uint32_t err_count = 0;
-
-	/* set FPGA_CFG_MEM_SEL HIGH
-	 * get TRCH_CFG_MEM_SEL
-	 * compare them
-	 *
-	 * set FPGA_CFG_MEM_SEL LOW
-	 * get TRCH_CFG_MEM_SEL again
-	 * compare them
-	 */
-
-	return err_count;
-}
-
 void set_pin_input(uint32_t offset)
 {
 	sys_write32(TEST_GPIO_IN, TEST_REG_ADDR(offset));
@@ -235,18 +210,6 @@ static uint32_t test_fpga_boot1(void)
 	return first == second;
 }
 
-static uint32_t test_fpga_program_b(void)
-{
-	/* this pin must be tested before the FPGA is ON */
-	return 0;
-}
-
-static uint32_t test_fpga_init_b(void)
-{
-	/* this pin must be tested before the FPGA is ON */
-	return 0;
-}
-
 /*
  * FPGA_PWR_CYCLE_REQ
  * PortB 1 / RB1
@@ -292,19 +255,7 @@ static uint32_t test_fpga_pwr_cycle_req(void)
 	return first == second;
 }
 
-static uint32_t test_trch_cfg_mem_moni(void)
-{
-	uint32_t err_count = 0;
-	return err_count;
-}
-
 static uint32_t test_fpga_watchdog(void)
-{
-	uint32_t err_count = 0;
-	return err_count;
-}
-
-static uint32_t test_fpga_cfg_mem_sel(void)
 {
 	uint32_t err_count = 0;
 	return err_count;
@@ -316,34 +267,15 @@ static uint32_t test_fpga_reserve(void)
 	return err_count;
 }
 
-static uint32_t test_fpga_program_b_in(void)
-{
-	uint32_t err_count = 0;
-	return err_count;
-}
-
-static uint32_t test_fpga_init_b_in(void)
-{
-	uint32_t err_count = 0;
-	return err_count;
-}
-
 static uint32_t open_circuit_tests(void)
 {
 	uint32_t err_count = 0;
 
-	err_count += test_trch_cfg_mem_sel();
 	err_count += test_fpga_boot0();
 	err_count += test_fpga_boot1();
-	err_count += test_fpga_program_b();
-	err_count += test_fpga_init_b();
 	err_count += test_fpga_pwr_cycle_req();
-	err_count += test_trch_cfg_mem_moni();
 	err_count += test_fpga_watchdog();
-	err_count += test_fpga_cfg_mem_sel();
 	err_count += test_fpga_reserve();
-	err_count += test_fpga_program_b_in();
-	err_count += test_fpga_init_b_in();
 
 	return err_count;
 }
