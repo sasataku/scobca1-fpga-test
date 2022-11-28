@@ -11,7 +11,7 @@
 #include "can.h"
 #include "test_register.h"
 
-static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
+int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 {
 	uint16_t can_id = 'T';
 	uint8_t can_data[2];

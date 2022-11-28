@@ -7,3 +7,4 @@
 #pragma once
 
 uint32_t trch_test(void);
+int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg);

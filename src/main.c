@@ -60,6 +60,7 @@ enum ScTestNo {
 	SC_TEST_TRCH,
 	SC_TEST_CRACK_CAN,
 	SC_TEST_CRACK_I2C_INTERNAL,
+	SC_TEST_TRCH_CFG_MEM_MONI,
 	SC_TEST_PDI,
 };
 
@@ -96,6 +97,7 @@ void print_menu(void)
 	info("[%d] Shared Pin Test\n", SC_TEST_TRCH);
 	info("[%d] CAN crack Test\n", SC_TEST_CRACK_CAN);
 	info("[%d] Internal I2C crack Test\n", SC_TEST_CRACK_I2C_INTERNAL);
+	info("[%d] Config Memory TRCH_CFG_MEM_MONI Test\n", SC_TEST_TRCH_CFG_MEM_MONI);
 	info("[%d] Pre Delivery Inspection\n", SC_TEST_PDI);
 }
 
@@ -222,6 +224,9 @@ void main(void)
 			break;
 		case SC_TEST_CRACK_I2C_INTERNAL:
 			i2c_internal_crack_test(test_no);
+			break;
+		case SC_TEST_TRCH_CFG_MEM_MONI:
+			qspi_config_memory_trch_moni_test(test_no);
 			break;
 		case SC_TEST_PDI:
 			start_pdi(test_no);
