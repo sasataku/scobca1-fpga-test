@@ -10,6 +10,10 @@
 #define C1DBTCFG   (0x008)
 #define C1TDC      (0x00c)
 #define C1TBC      (0x010)
+#define C1INT      (0x01c)
+#define C1RXIF     (0x024)
+#define C1BDIAG0   (0x038)
+#define C1BDIAG1   (0x03c)
 
 #define C1FIFOCON1 (0x05c)
 #define C1FIFOSTA1 (0x060)
