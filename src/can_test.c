@@ -287,11 +287,9 @@ uint32_t can_crack_test(uint32_t test_no)
 	}
 
 	info("*** [#2] Start CAN SLEEP Enable Test\n");
-/*
 	if (!can_crack_sleep_en_test()) {
 		err_num++;
 	}
-*/
 
 	info("*** test done, error count: %d ***\n", err_num);
 
