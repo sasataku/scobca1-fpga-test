@@ -43,8 +43,12 @@ void can_irq_cb(void *arg)
 {
 	uint32_t isr = sys_read32(SCOBCA1_FPGA_CAN_ISR);
 
-	debug("* CAN ISR 0x%08x\n", isr);
-	write32(SCOBCA1_FPGA_CAN_ISR, isr);
+	/*
+	 * Disable ISR, but In the case of CAN abnormality test,
+	 * a large amount of ISR log is output, so debug logs
+	 * are not output.
+	 */
+	sys_write32(isr, SCOBCA1_FPGA_CAN_ISR);
 
 	/* Check TX DONE bit */
 	if ((isr & CAN_ISR_TXDONE_MASK) != 0) {
