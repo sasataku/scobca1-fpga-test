@@ -22,6 +22,8 @@
 
 #include "test.h"
 
+uint8_t the_error_counter;
+
 // PIC16LF877A Configuration Bit Settings
 #pragma config FOSC = HS        // Oscillator Selection bits (HS oscillator)
 #pragma config WDTE = OFF       // Watchdog Timer Enable bit (WDT disabled)
@@ -104,8 +106,6 @@ uint8_t set_tris_d(uint8_t val) { TRISD = val; return TRISD; }
 uint8_t set_tris_e(uint8_t val) { TRISE = val; return TRISE; }
 
 int spi_recv(uint8_t *buf, uint8_t len);
-void test_ok(bool ok);
-void test_send(uint8_t val);
 
 void do_active(void)
 {
@@ -125,6 +125,11 @@ void do_active(void)
                         ok = do_cmd1();
                         test_ok(ok);
                         break;
+
+                case ASCII_ENQ:
+                        test_send_counter(the_error_counter);
+                        break;
+
                 case 'a': val = get_port_a(); test_send(val); break;
                 case 'b': val = get_port_b(); test_send(val); break;
                 case 'c': val = get_port_c(); test_send(val); break;
@@ -211,13 +216,13 @@ void main (void)
 
         /* Tests */
         /*  - TRCH */
-        test_trch_r269();
+        the_error_counter += test_trch_r269();
         /*  - I2C */
-        test_temp();
-        test_i2c_bridges();
+        the_error_counter += test_temp();
+        the_error_counter += test_i2c_bridges();
         /*  - CAN */
         prepare_can_test();
-        test_can();
+        the_error_counter += test_can();
 
         while (1) {
                 fpga_state = fpga_state_control(activate_fpga, config_memory, boot_mode);
