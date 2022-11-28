@@ -1,1 +1,44 @@
-#+Title: Tests for SC-OBC-A1 FPGA on Zephyr RTOS
+#+Title: Tests for SC-OBC-A1
+
+This repository contains C source code for both Zephyr and PIC for SC-OBC.
+
+* Build and Install
+** Zephyr
+
+   Usual command sequece should work.
+
+   #+begin_src shell
+     $ west update
+     $ west build
+     $ west flash
+   #+end_src
+
+   This code is targeting 128 KB ITCM.  Make sure the FPGA has enough
+   ITCM to run it.  The reason to run on ITCM is that we must check the
+   SRAM pins.  You can't check the SRAM pins while running on the SRAM.
+
+   Because it's targeting ITCH, you don't need to switch to HRMEM with
+
+   #+begin_src shell
+     $ west flash --cmd-pre-load 'mww 0x4f000000 0x5a5a0000'
+   #+end_src
+
+   Just plain =west flash= should work.
+
+** PIC
+
+   The source code is built using XC8 v2.40. And can be programmed via PICkit4.
+
+   #+begin_src shell
+     $ make
+     $ make program
+   #+end_src
+
+* Remarks
+** Zephyr
+*** Threads
+    There are three threads currently used and one idel thread.
+
+    - Main :: The main thread we use to run the tests. Priority is 0.
+    - Long Run :: A thread to run long running tests. Priority is 7.
+    - Watchdog :: A thread to kick the watchdog. Priority is 7.
