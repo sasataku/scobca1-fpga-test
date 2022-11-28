@@ -406,6 +406,7 @@ void main (void)
          */
         SRS3_UART_DE = 1;
         SRS3_UART_RE_B = 0;
+        __delay_ms(100);
         printf("SC OBC TRCH-FW for Quality Inspection\n");
 
         do_tests();
