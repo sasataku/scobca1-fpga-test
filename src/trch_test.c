@@ -88,29 +88,29 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 /* RA4: FPGA_INIT_B      IN  HIGH */ /* Open Drain */
 /* RA5: FPGAPWR_EN       OUT HIGH */
 
-uint8_t get_porta(void) { return send_cmd_to_trch('a', 0, false); }
-uint8_t get_portb(void) { return send_cmd_to_trch('b', 0, false); }
-uint8_t get_portc(void) { return send_cmd_to_trch('c', 0, false); }
-uint8_t get_portd(void) { return send_cmd_to_trch('d', 0, false); }
-uint8_t get_porte(void) { return send_cmd_to_trch('e', 0, false); }
+uint8_t trch_get_porta(void) { return send_cmd_to_trch('a', 0, false); }
+uint8_t trch_get_portb(void) { return send_cmd_to_trch('b', 0, false); }
+uint8_t trch_get_portc(void) { return send_cmd_to_trch('c', 0, false); }
+uint8_t trch_get_portd(void) { return send_cmd_to_trch('d', 0, false); }
+uint8_t trch_get_porte(void) { return send_cmd_to_trch('e', 0, false); }
 
-uint8_t get_trisa(void) { return send_cmd_to_trch('t', 0, false); }
-uint8_t get_trisb(void) { return send_cmd_to_trch('u', 0, false); }
-uint8_t get_trisc(void) { return send_cmd_to_trch('v', 0, false); }
-uint8_t get_trisd(void) { return send_cmd_to_trch('w', 0, false); }
-uint8_t get_trise(void) { return send_cmd_to_trch('x', 0, false); }
+uint8_t trch_get_trisa(void) { return send_cmd_to_trch('t', 0, false); }
+uint8_t trch_get_trisb(void) { return send_cmd_to_trch('u', 0, false); }
+uint8_t trch_get_trisc(void) { return send_cmd_to_trch('v', 0, false); }
+uint8_t trch_get_trisd(void) { return send_cmd_to_trch('w', 0, false); }
+uint8_t trch_get_trise(void) { return send_cmd_to_trch('x', 0, false); }
 
-uint8_t set_porta(uint8_t val) { return send_cmd_to_trch('A', val, true); }
-uint8_t set_portb(uint8_t val) { return send_cmd_to_trch('B', val, true); }
-uint8_t set_portc(uint8_t val) { return send_cmd_to_trch('C', val, true); }
-uint8_t set_portd(uint8_t val) { return send_cmd_to_trch('D', val, true); }
-uint8_t set_porte(uint8_t val) { return send_cmd_to_trch('E', val, true); }
+uint8_t trch_set_porta(uint8_t val) { return send_cmd_to_trch('A', val, true); }
+uint8_t trch_set_portb(uint8_t val) { return send_cmd_to_trch('B', val, true); }
+uint8_t trch_set_portc(uint8_t val) { return send_cmd_to_trch('C', val, true); }
+uint8_t trch_set_portd(uint8_t val) { return send_cmd_to_trch('D', val, true); }
+uint8_t trch_set_porte(uint8_t val) { return send_cmd_to_trch('E', val, true); }
 
-uint8_t set_trisa(uint8_t val) { return send_cmd_to_trch('T', val, true); }
-uint8_t set_trisb(uint8_t val) { return send_cmd_to_trch('U', val, true); }
-uint8_t set_trisc(uint8_t val) { return send_cmd_to_trch('V', val, true); }
-uint8_t set_trisd(uint8_t val) { return send_cmd_to_trch('W', val, true); }
-uint8_t set_trise(uint8_t val) { return send_cmd_to_trch('X', val, true); }
+uint8_t trch_set_trisa(uint8_t val) { return send_cmd_to_trch('T', val, true); }
+uint8_t trch_set_trisb(uint8_t val) { return send_cmd_to_trch('U', val, true); }
+uint8_t trch_set_trisc(uint8_t val) { return send_cmd_to_trch('V', val, true); }
+uint8_t trch_set_trisd(uint8_t val) { return send_cmd_to_trch('W', val, true); }
+uint8_t trch_set_trise(uint8_t val) { return send_cmd_to_trch('X', val, true); }
 
 uint8_t set_out (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
 uint8_t set_in  (uint8_t val, uint8_t bit) { return val |  (1 << bit); }
@@ -171,23 +171,23 @@ static uint32_t test_fpga_boot0(void)
 	uint32_t reg;
 
 	/* setup */
-	data = get_porta();
-	tris = get_trisa();
+	data = trch_get_porta();
+	tris = trch_get_trisa();
 	reg = sys_read32(TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT0));
 
 	/* test */
 	set_pin_input(TEST_CTRL_TRCH_FPGA_BOOT0);
-	set_trisa(set_out(tris, FPGA_BOOT0));
+	trch_set_trisa(set_out(tris, FPGA_BOOT0));
 
-	set_porta(set_high(data, FPGA_BOOT0));
+	trch_set_porta(set_high(data, FPGA_BOOT0));
 	first = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_BOOT0);
 
-	set_porta(set_low(data, FPGA_BOOT0));
+	trch_set_porta(set_low(data, FPGA_BOOT0));
 	second = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_BOOT0);
 
 	/* restore */
-	set_porta(data);
-	set_trisa(tris);
+	trch_set_porta(data);
+	trch_set_trisa(tris);
 	sys_write32(reg, TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT0));
 
 	info("* FPGA_BOOT0: error %d\n", first == second);
@@ -204,23 +204,23 @@ static uint32_t test_fpga_boot1(void)
 	uint32_t reg;
 
 	/* setup */
-	data = get_porta();
-	tris = get_trisa();
+	data = trch_get_porta();
+	tris = trch_get_trisa();
 	reg = sys_read32(TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT1));
 
 	/* test */
 	set_pin_input(TEST_CTRL_TRCH_FPGA_BOOT1);
-	set_trisa(set_out(tris, FPGA_BOOT1));
+	trch_set_trisa(set_out(tris, FPGA_BOOT1));
 
-	set_porta(set_high(data, FPGA_BOOT1));
+	trch_set_porta(set_high(data, FPGA_BOOT1));
 	first = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_BOOT1);
 
-	set_porta(set_low(data, FPGA_BOOT1));
+	trch_set_porta(set_low(data, FPGA_BOOT1));
 	second = get_pin(TEST_MONI_TRCH, MONI_BIT_TRCH_FPGA_BOOT1);
 
 	/* restore */
-	set_porta(data);
-	set_trisa(tris);
+	trch_set_porta(data);
+	trch_set_trisa(tris);
 	sys_write32(reg, TEST_REG_ADDR(TEST_CTRL_TRCH_FPGA_BOOT1));
 
 	info("* FPGA_BOOT1: error %d\n", first == second);
