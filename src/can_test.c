@@ -117,12 +117,12 @@ static bool can_send_cmd_to_trch(uint8_t cmd_code)
 
 static bool can_crack_loopback_test(void)
 {
-	uint16_t can_id = 0x01;
+	uint16_t can_id = 'A';
 	uint32_t can_ext_id = 0x00;
 	uint8_t can_data[CAN_PKT_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF0};
 	bool extend = false;
 	int32_t timeout_us = 1000000;
-	uint16_t recv_can_id = 0x02;
+	uint16_t recv_can_id = 'F';
 	uint32_t recv_can_ext_id = 0x00;
 
 	debug("* [#1] Start CAN Test Initializing\n");
@@ -201,7 +201,7 @@ static bool can_crack_sleep_en_test(void)
 uint32_t can_loopback(void)
 {
 	uint32_t err_cnt = 0;
-	uint16_t can_id = 0x0123;
+	uint16_t can_id = 'F';
 	uint32_t can_ext_id = 0x35678;
 	uint8_t can_data[CAN_PKT_SIZE] = {0x12, 0x34, 0x56, 0x78, 0x9A, 0xBC, 0xDE, 0xF1};
 	uint32_t timeout_us = 10;
