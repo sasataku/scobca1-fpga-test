@@ -417,6 +417,7 @@ void main (void)
         test_i2c_bridges();
         /*  - CAN */
         prepare_can_test();
+        test_can();
 
         while (1) {
                 fpga_state = fpga_state_control(activate_fpga, config_memory, boot_mode);
