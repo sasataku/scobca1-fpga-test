@@ -303,7 +303,7 @@ int spi_recv(uint8_t *buf, uint8_t len)
         return ret;
 }
 
-static void prepare_can_test(void)
+void prepare_can_test(void)
 {
         uint8_t buf;
 
@@ -329,17 +329,4 @@ static void prepare_can_test(void)
         printf("C1CON %08lx\n", spi_read32(C1CON));
 
         can_setup_filter(CAN_ID_TRCH, CAN_MSID);
-}
-
-void do_tests(void)
-{
-        /* TRCH */
-        test_trch_r269();
-
-        /* I2C */
-        test_temp();
-        test_i2c_bridges();
-
-        /* CAN */
-        prepare_can_test();
 }

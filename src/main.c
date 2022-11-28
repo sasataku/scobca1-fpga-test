@@ -209,7 +209,14 @@ void main (void)
         __delay_ms(100);
         printf("SC OBC TRCH-FW for Quality Inspection\n");
 
-        do_tests();
+        /* Tests */
+        /*  - TRCH */
+        test_trch_r269();
+        /*  - I2C */
+        test_temp();
+        test_i2c_bridges();
+        /*  - CAN */
+        prepare_can_test();
 
         while (1) {
                 fpga_state = fpga_state_control(activate_fpga, config_memory, boot_mode);
