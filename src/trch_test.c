@@ -83,16 +83,6 @@ static int send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 
 #define FPGA_RESERVE        (7)
 
-/* port 0011 1010 */
-/* tris 0001 1000 */
-
-/* RA0: TRCH_CFG_MEM_SEL OUT low */
-/* RA1: FPGA_BOOT0       OUT HIGH */
-/* RA2: FPGA_BOOT1       OUT low */
-/* RA3: FPGA_PROGRAM_B   IN  HIGH */
-/* RA4: FPGA_INIT_B      IN  HIGH */ /* Open Drain */
-/* RA5: FPGAPWR_EN       OUT HIGH */
-
 uint8_t trch_get_porta(void) { return send_cmd_to_trch('a', 0, false); }
 uint8_t trch_get_portb(void) { return send_cmd_to_trch('b', 0, false); }
 uint8_t trch_get_portc(void) { return send_cmd_to_trch('c', 0, false); }
