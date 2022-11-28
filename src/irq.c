@@ -29,19 +29,6 @@ extern bool i2c_initalized;
 extern bool i2c_sw_access_done;
 extern uint32_t last_i2c_isr;
 
-enum ScObcA1IrqNo {
-	IRQ_NO_UART = 0,
-	IRQ_NO_HRMEM,
-	IRQ_NO_QSPI_CFG,
-	IRQ_NO_QSPI_DATA,
-	IRQ_NO_QSPI_FRAM,
-	IRQ_NO_CAN,
-	IRQ_NO_INTERNAL_I2C,
-	IRQ_NO_EXTERNAL_I2C,
-	IRQ_NO_SYSMON_HW,
-	IRQ_NO_SYSMON_BHM,
-};
-
 void hrmem_irq_cb(void *arg)
 {
 	uint32_t isr = sys_read32(SCOBCA1_FPGA_HRMEM_INTSTR);

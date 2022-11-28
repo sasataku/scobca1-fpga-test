@@ -31,6 +31,7 @@
 #include "system_reg.h"
 #include "longrun_test.h"
 #include "trch_test.h"
+#include "pdi.h"
 
 enum ScTestNo {
 	SC_TEST_QSPI_INIT = 1,
@@ -59,6 +60,7 @@ enum ScTestNo {
 	SC_TEST_TRCH,
 	SC_TEST_CRACK_CAN,
 	SC_TEST_CRACK_I2C_INTERNAL,
+	SC_TEST_PDI,
 };
 
 bool is_exit;
@@ -94,6 +96,7 @@ void print_menu(void)
 	info("[%d] Shared Pin Test\n", SC_TEST_TRCH);
 	info("[%d] CAN crack Test\n", SC_TEST_CRACK_CAN);
 	info("[%d] Internal I2C crack Test\n", SC_TEST_CRACK_I2C_INTERNAL);
+	info("[%d] Pre Delivery Inspection\n", SC_TEST_PDI);
 }
 
 #ifndef CONFIG_AUTO_RUN_TEST_NUMBER
@@ -219,6 +222,9 @@ void main(void)
 			break;
 		case SC_TEST_CRACK_I2C_INTERNAL:
 			i2c_internal_crack_test(test_no);
+			break;
+		case SC_TEST_PDI:
+			start_pdi(test_no);
 			break;
 		default:
 			break;
