@@ -61,7 +61,7 @@ enum ScTestNo {
 	SC_TEST_CRACK_CAN,
 	SC_TEST_CRACK_I2C_INTERNAL,
 	SC_TEST_TRCH_CFG_MEM_MONI,
-	SC_TEST_PDI,
+	SC_TEST_PDI = 99,
 };
 
 bool is_exit;
@@ -101,6 +101,16 @@ void print_menu(void)
 	info("[%d] Pre Delivery Inspection\n", SC_TEST_PDI);
 }
 
+static void print_ids(void)
+{
+	info("\n");
+	info("* System Register IP Version : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_VER));
+	info("* Build Information          : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_BUILDINFO));
+	info("* Device DNA 1               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA1));
+	info("* Device DNA 2               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA2));
+	info("\n");
+}
+
 #ifndef CONFIG_AUTO_RUN_TEST_NUMBER
 #define AUTO_RUN_TEST_NUMBER (-1)
 #else
@@ -117,12 +127,7 @@ void main(void)
 	console_getline_init();
 
 	info("This is the FPGA test program for SC-OBC-A1\n");
-	info("\n");
-	info("* System Register IP Version : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_VER));
-	info("* Build Information          : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_BUILDINFO));
-	info("* Device DNA 1               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA1));
-	info("* Device DNA 2               : %08x\n", sys_read32(SCOBCA1_FPGA_SYSREG_DNA2));
-	info("\n");
+	print_ids();
 	info("Please input `h` to show the test program menu\n");
 	info("\n");
 
@@ -230,7 +235,9 @@ void main(void)
 			break;
 		case SC_TEST_PDI:
 			start_pdi(test_no);
-			break;
+			print_ids();
+			/* Exit after Pre Delivery Inspection */
+			return;
 		default:
 			break;
 		}
