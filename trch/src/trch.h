@@ -59,6 +59,7 @@
 #define TRISB_INIT         0x3F
 #define PORTB_INIT         0x00
 
+#define SPICAN_INT_B       PORTBbits.RB0
 #define FPGA_PWR_CYCLE_REQ PORTBbits.RB1
 #define FPGA_WATCHDOG      PORTBbits.RB4
 #define FPGA_CFG_MEM_SEL   PORTBbits.RB5
@@ -78,6 +79,8 @@
 #define TRISC_INIT         0x94
 #define PORTC_INIT         0x00
 
+#define TRCH_CAN_SLEEP_EN_DIR TRISCbits.TRISC0
+#define TRCH_CAN_SLEEP_EN  PORTCbits.RC0
 #define SPICAN_CS_B_DIR    TRISCbits.TRISC1
 #define SPICAN_CS_B        PORTCbits.RC1
 #define FPGAPROG_MODE_B    PORTCbits.RC2

@@ -170,18 +170,27 @@ static void can_enable_tx_fifo(void)
         printf("C1CON %08lx\n", spi_read32(C1CON));
 }
 
+#define RXIE BIT(17)
+#define TFNRFNIE BIT(0)
+
 static void can_enable_rx_fifo(void)
 {
-        /* Use FIFO 2 as Receiving FIFO */
-        spi_write8(0x00, C1FIFOCON2);
+        /* Use FIFO 2 as Receiving FIFO and enable Receive FIFO Not Empty Interrupt */
+        spi_write8(TFNRFNIE, C1FIFOCON2);
+
+        /* Enable Recive FIFO Interrupt */
+        spi_write32(RXIE, C1INT);
 
         printf("C1FIFOCON2 %08lx\n", spi_read32(C1FIFOCON2));
         printf("C1FIFOSTA2 %08lx\n", spi_read32(C1FIFOSTA2));
         printf("C1CON %08lx\n", spi_read32(C1CON));
+        printf("C1INT %08lx\n", spi_read32(C1INT));
+        printf("C1RXIF %08lx\n", spi_read32(C1RXIF));
 }
 
 #define FLTEN0 BIT(7)
 
+#define CAN_ID_ANALYZER 'A' /* 0x41 */
 #define CAN_ID_FPGA 'F' /* 0x46 */
 #define CAN_ID_TRCH 'T' /* 0x54 */
 
@@ -224,6 +233,8 @@ static void spi_send(uint32_t *buf, uint8_t len, uint16_t sid)
         //spi_write8(0, C1FIFOCON1 + 2);
 
         /* send it */
+        /* UINC and TXREQ of the CiFIFOCONm register must be set at
+         * the same time after appending a message. -- DS20005678E */
         spi_write8(TXREQ | UINC, C1FIFOCON1 + 1);
 }
 
@@ -245,6 +256,16 @@ void test_send(uint8_t val)
         data[0] = 'p';
         data[1] = val;
         spi_send(&buf, 2, CAN_ID_FPGA);
+}
+
+void test_send_to_analyzer(uint8_t val)
+{
+        uint32_t buf;
+        uint8_t *data = (uint8_t*)&buf;
+
+        data[0] = 'p';
+        data[1] = val;
+        spi_send(&buf, 2, CAN_ID_ANALYZER);
 }
 
 static void can_setup_filter(uint16_t sid, uint16_t sid_mask)
@@ -278,6 +299,15 @@ int spi_recv(uint8_t *buf, uint8_t len)
 
         if (spi_read8(C1FIFOSTA2) & TFNRFNIF) {
 
+                if (SPICAN_INT_B == 1) {
+                        printf("SPICAN_INT_B ng");
+                }
+                printf("SPICAN_INT_B %d\n", SPICAN_INT_B);
+                printf("C1RXIF     %08lx\n", spi_read32(C1RXIF));
+                printf("C1INT      %08lx\n", spi_read32(C1INT));
+                printf("C1FIFOCON2 %08lx\n", spi_read32(C1FIFOCON2));
+                printf("C1FIFOSTA2 %08lx\n", spi_read32(C1FIFOSTA2));
+
                 stat = spi_read8(C1FIFOSTA2);
                 addr = spi_read16(C1FIFOUA2);
                 printf("C1FIFOSTA2 %02x C1FIFOUA2 %04x\n", stat, addr);
@@ -303,7 +333,7 @@ int spi_recv(uint8_t *buf, uint8_t len)
         return ret;
 }
 
-static void prepare_can_test(void)
+void prepare_can_test(void)
 {
         uint8_t buf;
 
@@ -331,15 +361,71 @@ static void prepare_can_test(void)
         can_setup_filter(CAN_ID_TRCH, CAN_MSID);
 }
 
-void do_tests(void)
+void test_can(void)
 {
-        /* TRCH */
-        test_trch_r269();
+        uint8_t counter = 0;
 
-        /* I2C */
-        test_temp();
-        test_i2c_bridges();
+        /* Test for SPICAN_INT_B */
+        {
+                uint8_t buf;
+                int r;
 
-        /* CAN */
-        prepare_can_test();
+                if (SPICAN_INT_B == 0) {
+                        printf("SPICAN_INT_B ng");
+                }
+
+                /* send a frame and wait for a frame.  spi_recv() will check
+                 * SPICAN_INT_B */
+                test_send_to_analyzer(counter++);
+                do {
+                        r = spi_recv(&buf, 1);
+                } while (r < 0);
+        }
+
+        /* Test for TRCH_CAN_SLEEP_EN */
+        {
+                uint8_t tx_error1;
+                uint8_t tx_error2;
+                uint8_t tx_error3;
+                uint16_t error_free1;
+                uint16_t error_free2;
+                uint16_t error_free3;
+                bool success;
+
+                /* Disable CAN phy and send a frame.  We expect error
+                 * counters go up and error free trans counter stays.
+                 * After re-enable the phy, we expect error counter to
+                 * stay and error-free counter goes up. */
+                __delay_ms(1);
+                tx_error1 = spi_read8(C1BDIAG0+1);
+                error_free1 = spi_read16(C1BDIAG1);
+
+                TRCH_CAN_SLEEP_EN = PORT_DATA_HIGH;
+                __delay_ms(1);
+
+                test_send_to_analyzer(counter++);
+                __delay_ms(1);
+
+                tx_error2 = spi_read8(C1BDIAG0+1);
+                error_free2 = spi_read16(C1BDIAG1);
+
+                TRCH_CAN_SLEEP_EN = PORT_DATA_LOW;
+                __delay_ms(1);
+
+                test_send_to_analyzer(counter++);
+                __delay_ms(1);
+
+                tx_error3 = spi_read8(C1BDIAG0+1);
+                error_free3 = spi_read16(C1BDIAG1);
+
+                printf("1 %x %x\n", tx_error1, error_free1);
+                printf("2 %x %x\n", tx_error2, error_free2);
+                printf("3 %x %x\n", tx_error3, error_free3);
+
+
+                success = (((tx_error1 < tx_error2) && (tx_error2 == tx_error3)) &&
+                           ((error_free1 == error_free2) && (error_free2 < error_free3)));
+
+                printf("TRCH_CAN_SLEEP_EN %s\n", success ? "ok" : "ng");
+        }
 }

@@ -126,6 +126,7 @@ void spi_write8(uint8_t data, uint16_t addr)
         return;
 }
 
+#if 0
 void spi_write16(uint16_t data, uint16_t addr)
 {
         uint8_t buf0;
@@ -144,6 +145,7 @@ void spi_write16(uint16_t data, uint16_t addr)
 
         return;
 }
+#endif
 
 void spi_write32(uint32_t data, uint16_t addr)
 {
