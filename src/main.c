@@ -36,9 +36,6 @@ static void __interrupt() isr(void) {
         if (PIR1bits.TMR2IF) {
                 timer2_isr();
         }
-        if (PIR1bits.RCIF) {
-                usart_receive_msg_isr();
-        }
 }
 
 static void trch_init (void) {
