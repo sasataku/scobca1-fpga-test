@@ -353,10 +353,6 @@ void main (void)
         do_tests();
 
         while (1) {
-                if (FPGA_PWR_CYCLE_REQ) {
-                        activate_fpga = FPGA_SHUTDOWN;
-                }
-
                 fpga_state = fpga_state_control(activate_fpga, config_memory, boot_mode);
                 switch(fpga_state) {
                 case FPGA_STATE_POWER_DOWN:
