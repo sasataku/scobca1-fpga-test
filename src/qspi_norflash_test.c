@@ -1048,6 +1048,7 @@ static bool verify_trch_cfg_mem_moni(bool is_hi)
 	bool cfg_mem_moni;
 
 	portb_data = send_cmd_to_trch('b', 0, false);
+	debug("* Recv PORT B Satus 0x%02x from TRCH\n", portb_data);
 	if (portb_data < 0) {
 		assert();
 		return false;
@@ -1079,7 +1080,7 @@ static bool qspi_config_memory_switch_memsel(uint32_t test_no)
 	for (uint8_t i=0; i<ARRAY_SIZE(cfg_mem); i++) {
 
 		info("* [%d-%d] Select Config Memory %d\n", test_no, subno, cfg_mem[i]);
-		if (!qspi_select_mem(base, QSPI_CFG_MEM1, &spi_ss)) {
+		if (!qspi_select_mem(base, cfg_mem[i], &spi_ss)) {
 			assert();
 			return false;
 		}
