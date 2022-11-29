@@ -11,6 +11,23 @@
 #include "trch.h"
 #include "test_register.h"
 
+#define TRCH_PORTC_INIT (0x94)
+#define TRCH_TRISC_INIT (0x00)
+#define TRCH_PORTD_INIT (0x0F)
+#define TRCH_TRISD_INIT (0x00)
+
+static void init_portc()
+{
+	trch_set_trisc(TRCH_PORTC_INIT);
+	trch_set_portc(TRCH_TRISD_INIT);
+}
+
+static void init_portd()
+{
+	trch_set_trisd(TRCH_PORTD_INIT);
+	trch_set_portd(TRCH_TRISD_INIT);
+}
+
 /*
  * uio4_06__uio4_10_test
  *
@@ -42,9 +59,86 @@
  * And, the following pins have pull-down
  *  - N/A
  */
+/* RC6 */
+#define TRCH_UART_RX (7)
+/* RD4 */
+#define TRCH_UIO03_00 (4)
+
 uint32_t uio4_06__uio4_10_test(void)
 {
-	return 0;
+	uint32_t err_count = 0;
+	uint32_t uio406_moni, uio410_moni;
+	uint32_t prev_trch_uart_rx, trch_uart_rx;
+	uint32_t prev_trch_uio300, trch_uio300;
+	uint32_t fpga_uio_406;
+	uint32_t fpga_uio_410;
+
+	info("* Start of UIO4_06 to UIO04_10 loop test\n");
+
+	/* Save current settings */
+	uio406_moni = sys_read32(TEST_REG_ADDR(TEST_CTRL_UIO4_06));
+	uio410_moni = sys_read32(TEST_REG_ADDR(TEST_CTRL_UIO4_10));
+
+	/* TTRCH_UART_RX/UIO03_00 is not connected to any pins,
+	 * so set the input and save the status */
+	trch_set_trisc(set_in(TRCH_TRISC_INIT, TRCH_UART_RX));
+	trch_set_trisd(set_in(TRCH_TRISD_INIT, TRCH_UIO03_00));
+	prev_trch_uart_rx = get_bit(trch_get_portc(), TRCH_UART_RX);
+	prev_trch_uio300 = get_bit(trch_get_portd(), TRCH_UIO03_00);
+
+	info("* [#1] UIO4_06 Hi\n");
+	/* Change to input all pin expected UIO4_06 */
+	set_pin_input(TEST_CTRL_UIO4_10);
+
+	/* Change output hi to UIO4_06 */
+	set_pin_output_high(TEST_CTRL_UIO4_06);
+
+	/*
+	 * Check all pin level (expected All Hi without UART RX/UIO03_00)
+	 */
+	fpga_uio_406 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_06);
+	fpga_uio_410 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_10);
+	trch_uart_rx = get_bit(trch_get_portc(), TRCH_UART_RX);
+	trch_uio300 = get_bit(trch_get_portd(), TRCH_UIO03_00);
+	if (!(fpga_uio_406 && fpga_uio_410 &&
+		trch_uart_rx == prev_trch_uart_rx && trch_uio300 == prev_trch_uio300)) {
+		err("  !!! Assertion failed: UIO4_06 (Hi) to UIO04_10 loop failed\n");
+		err("fpga_uio_406: 0x%x, fpga_uio_410: 0x%x, trch_uart_rx: 0x%x\n",
+				fpga_uio_406, fpga_uio_410, trch_uart_rx);
+		err("prev_trch_uart_rx: 0x%x, trch_uio300: 0x%x, prev_trch_uio300: 0x%x\n",
+				prev_trch_uart_rx, trch_uio300, prev_trch_uio300);
+		err_count++;
+	}
+
+	info("* [#1] UIO4_06 Hi\n");
+
+	/* Change output low to UIO4_06 */
+	set_pin_output_low(TEST_CTRL_UIO4_06);
+
+	/*
+	 * Check all pin level (expected All Low without UART RX/UIO03_00)
+	 */
+	fpga_uio_406 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_06);
+	fpga_uio_410 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_10);
+	trch_uart_rx = get_bit(trch_get_portc(), TRCH_UART_RX);
+	trch_uio300 = get_bit(trch_get_portd(), TRCH_UIO03_00);
+	if (!(!fpga_uio_406 && !fpga_uio_410 &&
+		trch_uart_rx == prev_trch_uart_rx && trch_uio300 == prev_trch_uio300)) {
+		err("  !!! Assertion failed: UIO4_06 (Low) to UIO04_10 loop failed\n");
+		err("fpga_uio_406: 0x%x, fpga_uio_410: 0x%x, trch_uart_rx: 0x%x\n",
+				fpga_uio_406, fpga_uio_410, trch_uart_rx);
+		err("prev_trch_uart_rx: 0x%x, trch_uio300: 0x%x, prev_trch_uio300: 0x%x\n",
+				prev_trch_uart_rx, trch_uio300, prev_trch_uio300);
+		err_count++;
+	}
+
+	/* Restore current settings */
+	init_portc();
+	init_portd();
+	sys_write32(uio406_moni, TEST_REG_ADDR(TEST_CTRL_UIO4_06));
+	sys_write32(uio410_moni, TEST_REG_ADDR(TEST_CTRL_UIO4_10));
+
+	return err_count;
 }
 
 /*
@@ -171,8 +265,6 @@ uint32_t uio4_08__i2c_fpga_ext_scl_tests(void)
 uint32_t uio4_09__i2c_fpga_ext_sda_tests(void)
 {
 	uint32_t err_count = 0;
-	uint8_t portc, portd;
-	uint8_t trisc, trisd;
 	uint32_t uio409_moni, i2csda_moni;
 	uint32_t prev_trch_uart_tx, trch_uart_tx;
 	uint32_t trch_i2c_sda;
@@ -182,50 +274,45 @@ uint32_t uio4_09__i2c_fpga_ext_sda_tests(void)
 	info("* Start of UIO4_09 to I2C_FPGA_EXT_SDA loop test\n");
 
 	/* Save current settings */
-	portc = trch_get_portc();
-	trisc = trch_get_trisc();
-	portd = trch_get_portd();
-	trisd = trch_get_trisd();
 	uio409_moni = sys_read32(TEST_REG_ADDR(TEST_CTRL_UIO4_09));
 	i2csda_moni = sys_read32(TEST_REG_ADDR(TEST_CTRL_I2C_EXT_SDA));
 
 	/* TTRCH_UART_TX is not connected to any pins, so set the input
 	 * and save the status */
-	trch_set_trisc(set_in(trisc, TRCH_UART_TX));
+	trch_set_trisc(set_in(TRCH_TRISC_INIT, TRCH_UART_TX));
 	prev_trch_uart_tx = get_bit(trch_get_portc(), TRCH_UART_TX);
 
 	info("* [#1] UIO4_09 Hi\n");
 	/* Change to input all pin expected UIO4_09 */
 	set_pin_input(TEST_CTRL_I2C_EXT_SDA);
-	trch_set_trisd(set_in(trisd, TRCH_I2C_EXT_SDA));
+	trch_set_trisd(set_in(TRCH_TRISD_INIT, TRCH_I2C_EXT_SDA));
 
 	/* Change output hi to UIO4_09 */
 	set_pin_output_high(TEST_CTRL_UIO4_09);
 
 	/*
-	 * Check all pin level (expected All Hi without UART TX)
+	 * Check all pin level (expected all Hi without UART TX)
 	 */
 	fpga_uio_409 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_09);
 	fpga_i2c_sda = get_pin(TEST_MONI_I2C_EXT, MONI_BIT_I2C_EXT_SDA);
 	trch_uart_tx = get_bit(trch_get_portc(), TRCH_UART_TX);
-	printk("uart tris 0x%x\n", trch_get_trisc());
 	trch_i2c_sda = get_bit(trch_get_portd(), TRCH_I2C_EXT_SDA);
-	printk("sda tris 0x%x\n", trch_get_trisd());
 	if (!(fpga_uio_409 && fpga_i2c_sda &&
 		trch_uart_tx == prev_trch_uart_tx && trch_i2c_sda)) {
 		err("  !!! Assertion failed: UIO4_09 (Hi) to I2C_FPGA_EXT_SDA loop failed\n");
-		err("fpga_uio_409: %x, fpga_i2c_sda: %x, trch_uart_tx: %d\n", fpga_uio_409, fpga_i2c_sda, trch_uart_tx);
-		err("prev_trch_uart_tx: %x, trch_i2c_sda: %x\n", prev_trch_uart_tx, trch_i2c_sda);
+		err("  fpga_uio_409: 0x%x, fpga_i2c_sda: 0x%x, trch_uart_tx: 0x%x\n",
+				fpga_uio_409, fpga_i2c_sda, trch_uart_tx);
+		err("   prev_trch_uart_tx: 0x%x, trch_i2c_sda: 0x%x\n",
+				prev_trch_uart_tx, trch_i2c_sda);
 		err_count++;
 	}
-	goto end_of_test;
 
 	info("* [#2] UIO4_09 Low\n");
-	/* Change output hi to UIO4_09 */
+	/* Change output low to UIO4_09 */
 	set_pin_output_low(TEST_CTRL_UIO4_09);
 
 	/*
-	 * Check all pin level
+	 * Check all pin level (expected all Low without UART TX)
 	 */
 	fpga_uio_409 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_09);
 	fpga_i2c_sda = get_pin(TEST_MONI_I2C_EXT, MONI_BIT_I2C_EXT_SDA);
@@ -234,20 +321,19 @@ uint32_t uio4_09__i2c_fpga_ext_sda_tests(void)
 	if (!(!fpga_uio_409 && !fpga_i2c_sda &&
 		trch_uart_tx == prev_trch_uart_tx && !trch_i2c_sda)) {
 		err("  !!! Assertion failed: UIO4_09 (Low) to I2C_FPGA_EXT_SDA loop failed\n");
-		err("fpga_uio_409: %x, fpga_i2c_sda: %x, trch_uart_tx: %d\n", fpga_uio_409, fpga_i2c_sda, trch_uart_tx);
-		err("prev_trch_uart_tx: %x, trch_i2c_sda: %x\n", prev_trch_uart_tx, trch_i2c_sda);
+		err("  fpga_uio_409: 0x%x, fpga_i2c_sda: 0x%x, trch_uart_tx: 0x%x\n",
+				fpga_uio_409, fpga_i2c_sda, trch_uart_tx);
+		err("  prev_trch_uart_tx: %x, trch_i2c_sda: %x\n",
+				prev_trch_uart_tx, trch_i2c_sda);
 		err_count++;
 	}
 
 	/* Restore current settings */
-	trch_set_portc(portc);
-	trch_set_trisc(trisc);
-	trch_set_portd(portd);
-	trch_set_trisd(trisd);
-	sys_write32(uio409_moni, TEST_REG_ADDR(TEST_MONI_USER_IO4));
-	sys_write32(i2csda_moni, TEST_REG_ADDR(TEST_MONI_I2C_EXT));
+	init_portc();
+	init_portd();
+	sys_write32(uio409_moni, TEST_REG_ADDR(TEST_CTRL_UIO4_09));
+	sys_write32(i2csda_moni, TEST_REG_ADDR(TEST_CTRL_I2C_EXT_SDA));
 
-end_of_test:
 	return err_count;
 }
 
@@ -271,8 +357,6 @@ uint32_t hardware_options_test(void)
 	}
 
 	info("* End of Hardware Option Pin Tests: err %d\n", err_count);
-
-	while(1);
 
 	return err_count;
 }
