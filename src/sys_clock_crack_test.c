@@ -16,10 +16,10 @@ uint32_t sys_clock_crack_test(uint32_t test_no)
 	info("*** System Clock crack test starts ***\n");
 	uint32_t err_count = 0;
 
-	if(!(get_test_moni_status(TEST_MONI_SYSCLK, MONI_BIT_SYSCLK2))){
+	if(!test_moni_status_high(TEST_MONI_SYSCLK, MONI_BIT_SYSCLK2)){
 		err_count++;
 	}
-	if(!(get_test_moni_status(TEST_MONI_SYSCLK, MONI_BIT_SYSCLK1))){
+	if(!test_moni_status_high(TEST_MONI_SYSCLK, MONI_BIT_SYSCLK1)){
 		err_count++;
 	}
 	info("*** test done, error count: %d ***\n", err_count);

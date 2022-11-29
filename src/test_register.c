@@ -7,29 +7,41 @@
 #include "common.h"
 #include "test_register.h"
 
-uint32_t get_test_moni_status(mem_addr_t addr_offset, uint8_t bit_pos)
+uint32_t get_test_moni_status(uint32_t addr_offset, uint8_t bit_pos)
 {
 	return read32(TEST_REG_ADDR(addr_offset)) & (0x1 << bit_pos);
 }
 
-uint32_t get_test_gpio_mode(mem_addr_t addr_offset)
+uint32_t get_test_gpio_mode(uint32_t addr_offset)
 {
 	return read32(TEST_REG_ADDR(addr_offset));
 }
 
-void set_test_gpio_mode(mem_addr_t addr_offset, uint32_t mode)
+void set_test_gpio_mode(uint32_t addr_offset, uint32_t mode)
 {
 	write32(TEST_REG_ADDR(addr_offset), mode);
 }
 
-bool assert_test_moni_status(
-				mem_addr_t addr_offset, uint8_t bit_pos, bool exp)
+bool test_moni_status_high(
+				uint32_t addr_offset, uint8_t bit_pos)
 {
-	bool state = get_test_moni_status(addr_offset, bit_pos);
+	return check_test_moni_status(addr_offset, bit_pos, (0x1 << bit_pos));
+}
 
-	if(exp != state){
-		err("moni state is not exp, addr: %08x, bit pos: %u, exp: %d\n"
-			TSET_REG_ADDR(addr_offset), bit_pos, exp);
+bool test_moni_status_low(
+				uint32_t addr_offset, uint8_t bit_pos)
+{
+	return check_test_moni_status(addr_offset, bit_pos, 0);
+}
+
+bool check_test_moni_status(
+				uint32_t addr_offset, uint8_t bit_pos, uint32_t exp)
+{
+	uint32_t status = get_test_moni_status(addr_offset, bit_pos);
+
+	if(exp != status){
+		err("moni state wrong, addr: 0x%08X, bitpos: %u, stat: 0x%08x, exp: %08x\n",
+			TEST_REG_ADDR(addr_offset), bit_pos, status, exp);
 		return false;
 	}
 

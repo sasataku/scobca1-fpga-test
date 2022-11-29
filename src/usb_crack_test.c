@@ -30,27 +30,27 @@ uint32_t usb_crack_test(uint32_t test_no)
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_CS, TEST_GPIO_OUT_HIGH);
 	set_test_gpio_mode(TEST_CTRL_ULPI_RESET_B, TEST_GPIO_OUT_HIGH);
-	if(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
+	if(!test_moni_status_low(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
 		err_count++;
 	}
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_CS, TEST_GPIO_OUT_LOW);
-	if(!(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK))){
+	if(!test_moni_status_high(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
 		err_count++;
 	}
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_CS, TEST_GPIO_OUT_HIGH);
-	if(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
+	if(!test_moni_status_low(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
 		err_count++;
 	}
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_RESET_B, TEST_GPIO_OUT_LOW);
-	if(!(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK))){
+	if(!test_moni_status_high(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
 		err_count++;
 	}
 
 	set_test_gpio_mode(TEST_CTRL_ULPI_RESET_B, TEST_GPIO_OUT_HIGH);
-	if(get_test_moni_status(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
+	if(!test_moni_status_low(TEST_MONI_ULPI_CLOCK, MONI_BIT_ULPI_CLOCK)){
 		err_count++;
 	}
 

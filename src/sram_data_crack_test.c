@@ -19,22 +19,22 @@ uint32_t sram_data_crack_test(uint32_t test_no)
 	 * confirm it changes.
 	 */
 
-    info("*** SRAM data crack test starts ***\n");
-    uint32_t err_count = 0;
+	info("*** SRAM data crack test starts ***\n");
+	uint32_t err_count = 0;
 
 	write32(TARGET_TEST_ADDR, 0x0);
-    if(!assert32(TARGET_TEST_ADDR, 0x0, 0)){
-        err_count++;
-    }
+	if(!assert32(TARGET_TEST_ADDR, 0x0, 0)){
+		err_count++;
+	}
 
-    for(int i = 0; i < 32 ; i++){
-        write32(TARGET_TEST_ADDR, 0x1 << i);
-        if(!assert32(TARGET_TEST_ADDR, 0x1 << i, 0)){
-            err_count++;
-        }
-    }
+	for(int i = 0; i < 32 ; i++){
+		write32(TARGET_TEST_ADDR, 0x1 << i);
+		if(!assert32(TARGET_TEST_ADDR, 0x1 << i, 0)){
+			err_count++;
+		}
+	}
 
-    info("*** test done, error count: %d ***\n", err_count);
+	info("*** test done, error count: %d ***\n", err_count);
 
-    return err_count;
+	return err_count;
 }

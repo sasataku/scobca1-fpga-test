@@ -41,16 +41,16 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 	info("*** SRAM addr crack test starts ***\n");
 	uint32_t err_count = 0;
 
-	mem_addr_t test_addr;
+	uint32_t test_addr;
 
 	/* between 0 and 18 pins */
-	mem_addr_t compare_addr = 0x00200000;
+	uint32_t compare_addr = 0x00200000;
 	write32(compare_addr, (uint32_t)compare_addr);
 
-	for(mem_addr_t i = 0x4; i <= 0x100000; i = i << 1){
+	for(uint32_t i = 0x4; i <= 0x100000; i = i << 1){
 		test_addr = compare_addr + i;
 		write32(test_addr, test_addr);
-		if(read32(test_addr) == read32(compare_addr)){
+		if(!assert32(test_addr, read32(compare_addr), 0)){
 			err_count++;
 		}
 	}
@@ -61,7 +61,7 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 	test_addr = 0x00300000;
 	write32(test_addr, (uint32_t)test_addr);
 
-	if(read32(test_addr) == read32(compare_addr)){
+	if(!assert32(test_addr, read32(compare_addr), 0)){
 		err_count++;
 	}
 
