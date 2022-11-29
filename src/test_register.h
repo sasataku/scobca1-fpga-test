@@ -368,9 +368,9 @@ struct loopback_test_regs
 	uint8_t moni_bitpos;
 };
 
-void set_test_gpio_mode(uint32_t addr, uint32_t mode);
-uint32_t get_test_gpio_mode(uint32_t addr);
-uint32_t get_test_moni_status(uint32_t addr, uint8_t bitpos);
+void set_test_gpio_mode(mem_addr_t addr, uint32_t mode);
+uint32_t get_test_gpio_mode(mem_addr_t addr);
+uint32_t get_test_moni_status(mem_addr_t addr, uint8_t bitpos);
 uint32_t test_paired_pins_connection(struct loopback_test_regs *target);
 
 #endif /* SCOBCA1_FPGA_TEST_REGISTER_H_ */

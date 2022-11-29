@@ -21,7 +21,7 @@ void write8(mem_addr_t addr, uint8_t val)
 
 uint16_t read16(mem_addr_t addr)
 {
-	uint16_t val = sys_read32(addr);
+	uint16_t val = sys_read16(addr);
 	debug("     read16 [addr:0x%08X] 0x%04x\n", addr, val);
 	return val;
 }
@@ -29,7 +29,7 @@ uint16_t read16(mem_addr_t addr)
 void write16(mem_addr_t addr, uint16_t val)
 {
 	sys_write16(val, addr);
-	debug("     write32 [0x%08X] 0x%04x\n", addr, val);
+	debug("     write16 [0x%08X] 0x%04x\n", addr, val);
 }
 
 uint32_t read32(mem_addr_t addr)
