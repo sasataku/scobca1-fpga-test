@@ -22,8 +22,12 @@
 #define err(format, ...) printk(format, ##__VA_ARGS__)
 #define assert() printk("  %s:%d\n", __FILE__, __LINE__);
 
-uint32_t read32(uint32_t addr);
-void write32(uint32_t addr, uint32_t val);
+uint8_t read8(mem_addr_t addr);
+void write8(mem_addr_t addr, uint8_t val);
+uint16_t read16(mem_addr_t addr);
+void write16(mem_addr_t addr, uint16_t val);
+uint32_t read32(mem_addr_t addr);
+void write32(mem_addr_t addr, uint32_t val);
 bool assert32(uint32_t addr, uint32_t exp, uint32_t retry);
 void print_result();
 
