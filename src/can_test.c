@@ -49,7 +49,7 @@ static bool can_recv_test(uint16_t can_id, uint32_t can_ext_id, uint8_t *exp_can
 	return ret;
 }
 
-static bool can_send_cmd_to_trch(uint8_t cmd_code)
+static bool can_test_send_cmd_to_trch(uint8_t cmd_code)
 {
 	uint16_t can_id = 0x46;
 	uint32_t can_ext_id = 0x00;
@@ -267,7 +267,7 @@ uint32_t can_send_cmd(uint32_t test_no)
 	s = console_getline();
 	cmd_code = strtol(s, NULL, 10);
 
-	if (!can_send_cmd_to_trch(cmd_code)) {
+	if (!can_test_send_cmd_to_trch(cmd_code)) {
 		err_cnt++;
 	}
 

@@ -459,7 +459,7 @@ static bool qspi_norflash_quad_read_data(uint32_t base, uint32_t spi_ss, uint32_
 
 	debug("* Send Memory Address (3byte)\n");
 	write_mem_addr_to_flash(base, mem_addr);
-	
+
 	debug("* Send Mode (0x00)\n");
 	write32(SCOBCA1_FPGA_NORFLASH_QSPI_TDR(base), 0x00);
 
@@ -1047,7 +1047,7 @@ static bool verify_trch_cfg_mem_moni(bool is_hi)
 	uint8_t portb_data;
 	bool cfg_mem_moni;
 
-	portb_data = send_cmd_to_trch('b', 0, false);
+	portb_data = can_send_cmd_to_trch('b', 0, false);
 	debug("* Recv PORT B Satus 0x%02x from TRCH\n", portb_data);
 	if (portb_data < 0) {
 		assert();
