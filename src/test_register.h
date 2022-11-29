@@ -9,6 +9,9 @@
 
 #include <zephyr/kernel.h>
 
+/* SRAM mirror start */
+#define SRAM_MIRROR_BASE (0x60000000)
+
 /* Base address */
 #define SCOBCA1_FPGA_TEST_REG_BASE_ADDR  (0x4FF00000)
 #define TEST_REG_ADDR(offset) (SCOBCA1_FPGA_TEST_REG_BASE_ADDR + offset)

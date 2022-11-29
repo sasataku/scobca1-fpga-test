@@ -14,28 +14,25 @@
 uint32_t sram_addr_crack_test(uint32_t test_no)
 {
 	/*
-	 * SRAM area for test is between 0x00100000 and 0x003fffff.
-	 * To check addr pin works properly, compare values between
-	 * addresses which only one (target) address pin is differ.
+	 * SRAM area for test is between 0x60000000 and 0x603fffff.
+	 * To check if crack exist as follows:
+	 * 
+	 * 1. set unique data to address which only one address pin
+	 * asserts and to all zero.
+	 * (e.g.)
+	 * addr   : data
+	 * 0b0000 : 0000
+	 * 0b0001 : 0001
+	 * 0b0010 : 0010
+	 * 0b0100 : 0100
+	 * 0b1000 : 1000
 	 *
-	 * In this case, while 0 to 18 pins, use addr 0x00200000 to
-	 * compare value, for 19 (highest) pin, use addr 0x00100000
+	 * 2. read back to chack all data written stay same
 	 *
-	 * compare value with 0x00200000
-	 *  0: 0x00200004
-	 *  1: 0x00200008
-	 *  2: 0x00200010
-	 *  3: 0x00200020
-	 *  ....
-	 * 16: 0x00240000
-	 * 17: 0x00280000
-	 * 18: 0x00300000
+	 * If some pins are broken and stick to same signal level,
+	 * it can be detected by checking all zero addr's value,
+	 * I suppose.
 	 *
-	 * compare value with 0x00100000
-	 * 19: 0x00300000
-	 *
-	 * write different data to each address to compare
-	 * (using addr itself as different data)
 	 */
 
 	info("*** SRAM addr crack test starts ***\n");
@@ -43,12 +40,11 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 
 	uint32_t test_addr;
 
-	/* between 0 and 18 pins, write unique data to all addr
-	 * and then read back */
-	uint32_t compare_addr = 0x00200000;
-	write32(compare_addr, (uint32_t)compare_addr);
+	/* write unique data to all addr and then read back */
+	uint32_t compare_addr = SRAM_MIRROR_BASE; /* 0x60000000 */
+	write32(compare_addr, compare_addr);
 
-	for(uint32_t i = 0x4; i <= 0x100000; i = i << 1){
+	for(uint32_t i = 0x4; i <= 0x200000; i = i << 1){
 		test_addr = compare_addr + i;
 		write32(test_addr, test_addr);
 	}
@@ -57,25 +53,11 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 		err_count++;
 	}
 
-	for(uint32_t i = 0x4; i <= 0x100000; i = i << 1){
+	for(uint32_t i = 0x4; i <= 0x200000; i = i << 1){
 		test_addr = compare_addr + i;
 		if(!assert32(test_addr, test_addr, 0)){
 			err_count++;
 		}
-	}
-
-	/* 19 pin */
-	compare_addr = 0x00100000;
-	write32(compare_addr, (uint32_t)compare_addr);
-
-	test_addr = 0x00300000;
-	write32(test_addr, (uint32_t)test_addr);
-
-	if(!assert32(compare_addr, compare_addr, 0)){
-		err_count++;
-	}
-	if(!assert32(test_addr, test_addr, 0)){
-		err_count++;
 	}
 
 	info("*** test done, error count: %d ***\n", err_count);
