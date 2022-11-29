@@ -36,7 +36,7 @@ static uint32_t init_user_io_mode(void)
 		struct loopback_test_regs *pair = &user_io_pairs[i];
         set_test_gpio_mode(pair->in_ctrl_reg, TEST_GPIO_IN);
 		set_test_gpio_mode(pair->out_ctrl_reg, TEST_GPIO_OUT_LOW);
-		if(get_test_moni_status(pair->in_moni_reg, pair->moni_bitpos)){
+		if(!test_moni_status_low(pair->in_moni_reg, pair->moni_bitpos)){
 			err_count++;
         }
     }
@@ -53,7 +53,7 @@ static uint32_t check_others_unchanged(const struct loopback_test_regs *self_pai
 		if(self_pair->out_ctrl_reg == pair->out_ctrl_reg){
 			continue; // self
 		}
-		if(get_test_moni_status(pair->in_moni_reg, pair->moni_bitpos)){
+		if(!test_moni_status_low(pair->in_moni_reg, pair->moni_bitpos)){
 			err_count++; // bridged
         }
     }
@@ -82,7 +82,7 @@ uint32_t user_io_bridge_test(uint32_t test_no)
 
         // Set High and check self and others
         set_test_gpio_mode(pair->out_ctrl_reg, TEST_GPIO_OUT_HIGH);
-		if(!(get_test_moni_status(pair->in_moni_reg, pair->moni_bitpos))){
+		if(!test_moni_status_high(pair->in_moni_reg, pair->moni_bitpos)){
 			err_count++; // bridge with some pin?
 		}
         err_count += check_others_unchanged(pair);

@@ -41,7 +41,7 @@ uint32_t sram_err_crack_test(uint32_t test_no)
         return ++err_count;
     }
 
-    mem_addr_t test_addr = TEST_START_ADDR;
+    uint32_t test_addr = TEST_START_ADDR;
     int test_count = 0;
     for(; test_count < max_test_count; test_count++){
         read16(test_addr);
@@ -50,7 +50,13 @@ uint32_t sram_err_crack_test(uint32_t test_no)
         }
         test_addr += TEST_SKIP_ADDR;
     }
-    if(test_count == max_test_count) err_count++;
+    if(test_count == max_test_count){
+		err("SRAM1 error couldn't be detected, moni addr: 0x%08X, val: %08x\n",
+			TEST_REG_ADDR(TEST_MONI_SRAM_ERR),
+        	get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM1_ERR)
+			);
+	   	err_count++;
+	}
 
     // SRAM 2 Test
     write32(TEST_MONI_SRAM_ERR, 0x0);
@@ -69,7 +75,13 @@ uint32_t sram_err_crack_test(uint32_t test_no)
         }
         test_addr += TEST_SKIP_ADDR;
     }
-    if(test_count == max_test_count) err_count++;
+    if(test_count == max_test_count){
+		err("SRAM2 error couldn't be detected, moni addr: 0x%08X, val: %08x\n",
+			TEST_REG_ADDR(TEST_MONI_SRAM_ERR),
+        	get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM1_ERR)
+		   );
+	   	err_count++;
+	}
 
     info("*** test done, error count: %u ***\n", err_count);
 

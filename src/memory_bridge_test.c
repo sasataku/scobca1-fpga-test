@@ -107,7 +107,11 @@ static uint32_t check_sram_err_unchanged()
 	uint32_t err_count = 0;
 
 	if(sram_err_init_status != (read32(TEST_REG_ADDR(TEST_MONI_SRAM_ERR)) & 0x3)){
-		return ++err_count;
+		err("sram err status changed, moni addr: 0x%08X, cur: 0x%08x, init: 0x%08x\n",
+					TEST_REG_ADDR(TEST_MONI_SRAM_ERR),
+				   	read32(TEST_REG_ADDR(TEST_MONI_SRAM_ERR)),
+					sram_err_init_status);
+		err_count++;
 	}
 
 	return err_count;
@@ -118,7 +122,11 @@ static uint32_t check_sram_io_unchanged()
 	uint32_t err_count = 0;
 
 	if(sram_io_init_status != read32(TEST_REG_ADDR(TEST_MONI_SRAM_IO))){
-		return ++err_count;
+		err("sram data changed, moni addr: 0x%08X, cur: 0x%08x, init: 0x%08x\n",
+					TEST_REG_ADDR(TEST_MONI_SRAM_IO),
+				   	read32(TEST_REG_ADDR(TEST_MONI_SRAM_IO)),
+					sram_err_init_status);
+		err_count++;
 	}
 
 	return err_count;
@@ -133,8 +141,11 @@ static uint32_t check_others_unchanged(uint32_t self_index)
 		if(i == self_index) continue; // skip the controlled pin itself
 
 		struct bridge_test_regs *target = &memory_targets[i];
-		if(get_test_moni_status(target->moni_offset, target->moni_bitpos)
-					   	!= target->init_status){
+		if(!check_test_moni_status(
+						target->moni_offset,
+					   	target->moni_bitpos,
+					   	target->init_status))
+		{
 			err_count++;
 		}
 	}
@@ -168,14 +179,14 @@ uint32_t memory_bridge_test(uint32_t test_no)
 
 		// Set High
 		set_test_gpio_mode(target->ctrl_offset, TEST_GPIO_OUT_HIGH);
-		if(!(get_test_moni_status(target->moni_offset, target->moni_bitpos))){
+		if(!test_moni_status_high(target->moni_offset, target->moni_bitpos)){
 			err_count++;
 		}
 		err_count += check_others_unchanged(i); // pass self index to avoid
 
 		// Set Low
 		set_test_gpio_mode(target->ctrl_offset, TEST_GPIO_OUT_LOW);
-		if(get_test_moni_status(target->moni_offset, target->moni_bitpos)){
+		if(!test_moni_status_low(target->moni_offset, target->moni_bitpos)){
 			err_count++;
 		}
 		err_count += check_others_unchanged(i);

@@ -27,27 +27,31 @@ uint32_t sram_byte_crack_test(uint32_t test_no)
 		   	(byte_data1 << 24) + (byte_data2 << 16) + (byte_data3 << 8) + byte_data4;
 
 	uint32_t work_mem = 0;
-	mem_addr_t target_addr = (mem_addr_t)&work_mem;
+	uint32_t target_addr = (uint32_t)&work_mem;
 
     /* write 32bit work area by byte access */
-	write8(byte_data1, (mem_addr_t)(target_addr + 3));
-	write8(byte_data2, (mem_addr_t)(target_addr + 2));
-	write8(byte_data3, (mem_addr_t)(target_addr + 1));
-	write8(byte_data4, (mem_addr_t)(target_addr));
+	write8(byte_data1, (uint32_t)(target_addr + 3));
+	write8(byte_data2, (uint32_t)(target_addr + 2));
+	write8(byte_data3, (uint32_t)(target_addr + 1));
+	write8(byte_data4, (uint32_t)(target_addr));
 
-	debug("data: 0x%08x\n", work_mem);
+	debug("data: 0x%08x\n", *(uint32_t*)target_addr);
 
-	if(work_mem != word_data){
-			err_count++;
+	if(*(uint32_t*)target_addr != word_data){
+		err("byte write access failed, data(32): %08x, data(8x4): %08x\n", 
+			*(uint32_t*)target_addr, word_data);
+		err_count++;
 	}
 
     /* read 32bit work area by byte access */
-	if(read8((mem_addr_t)(target_addr + 3)) != byte_data1 ||
-	   read8((mem_addr_t)(target_addr + 2)) != byte_data2 ||
-	   read8((mem_addr_t)(target_addr + 1)) != byte_data3 ||
-	   read8((mem_addr_t)(target_addr)) != byte_data4)
+	if(read8((uint32_t)(target_addr + 3)) != byte_data1 ||
+	   read8((uint32_t)(target_addr + 2)) != byte_data2 ||
+	   read8((uint32_t)(target_addr + 1)) != byte_data3 ||
+	   read8((uint32_t)(target_addr)) != byte_data4)
 	{
-			err_count++;
+		err("byte write access failed, data(32): %08x, data(8x4): %08x\n", 
+			*(uint32_t*)target_addr, word_data);
+		err_count++;
 	}
 
 	info("*** test done, error count: %d ***\n", err_count);
