@@ -15,6 +15,8 @@
 #define TRCH_PORTC_INIT (0x00)
 #define TRCH_TRISD_INIT (0x0F)
 #define TRCH_PORTD_INIT (0x00)
+#define TRCH_TRISE_INIT (0x07)
+#define TRCH_PORTE_INIT (0x00)
 
 static void init_portc()
 {
@@ -26,6 +28,12 @@ static void init_portd()
 {
 	trch_set_trisd(TRCH_TRISD_INIT);
 	trch_set_portd(TRCH_PORTD_INIT);
+}
+
+static void init_porte()
+{
+	trch_set_trise(TRCH_TRISE_INIT);
+	trch_set_porte(TRCH_PORTE_INIT);
 }
 
 /*
@@ -59,10 +67,8 @@ static void init_portd()
  * And, the following pins have pull-down
  *  - N/A
  */
-/* RC6 */
-#define TRCH_UART_RX (7)
-/* RD4 */
-#define TRCH_UIO03_00 (4)
+#define TRCH_UART_RX  (7)  /* RC6 */
+#define TRCH_UIO03_00 (4)  /* RD4 */
 
 uint32_t uio4_06__uio4_10_test(void)
 {
@@ -175,9 +181,84 @@ uint32_t uio4_06__uio4_10_test(void)
  * And, the following pins have pull-down
  *  - N/A
  */
+#define TRCH_UIO03_01 (5)  /* RD5 */
+#define TRCH_WDOG_OUT (0)  /* RE0 */
+
 uint32_t uio4_07__wdog_out_test(void)
 {
-	return 0;
+	uint32_t err_count = 0;
+	uint32_t uio407_moni, uio411_moni;
+	uint32_t prev_trch_uio301, trch_uio301;
+	uint32_t trch_wdogout;
+	uint32_t fpga_uio_407;
+	uint32_t prev_fpga_uio_411, fpga_uio_411;
+
+	info("* Start of UIO4_07 to WDOG_OUT loop test\n");
+
+	/* Save current settings */
+	uio407_moni = sys_read32(TEST_REG_ADDR(TEST_CTRL_UIO4_07));
+	uio411_moni = sys_read32(TEST_REG_ADDR(TEST_CTRL_UIO4_11));
+
+	/* TTRCH_UIO03_00 and FFPGA UIO04_11 is not connected to any pins,
+	 * so set the input and save the status */
+	trch_set_trisd(set_in(TRCH_TRISD_INIT, TRCH_UIO03_01));
+	prev_trch_uio301 = get_bit(trch_get_portd(), TRCH_UIO03_01);
+	set_pin_input(TEST_CTRL_UIO4_11);
+	prev_fpga_uio_411 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_11);
+
+	info("* [#1] UIO4_07 Hi\n");
+	/* Change to input all pin expected UIO4_06 */
+	trch_set_trise(set_in(TRCH_TRISE_INIT, TRCH_WDOG_OUT));
+
+	/* Change output hi to UIO4_06 */
+	set_pin_output_high(TEST_CTRL_UIO4_07);
+
+	/*
+	 * Check all pin level (expected All Hi without UIO03_01/UIO04_11)
+	 */
+	fpga_uio_407 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_07);
+	fpga_uio_411 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_11);
+	trch_uio301 = get_bit(trch_get_portd(), TRCH_UIO03_01);
+	trch_wdogout = get_bit(trch_get_porte(), TRCH_WDOG_OUT);
+	if (!(fpga_uio_407 && fpga_uio_411 == prev_fpga_uio_411 &&
+		trch_wdogout && trch_uio301 == prev_trch_uio301)) {
+		err("  !!! Assertion failed: UIO4_07 (Hi) to WDOG_OUT loop failed\n");
+		err("fpga_uio_407: 0x%x, fpga_uio_411 : 0x%x, prev_fpga_uio_411: 0x%x\n",
+				fpga_uio_407, fpga_uio_411, prev_fpga_uio_411);
+		err("trch_wdogout: 0x%x, trch_uio301: 0x%x, prev_trch_uio301: 0x%x\n",
+				trch_wdogout, trch_uio301, prev_trch_uio301);
+		err_count++;
+	}
+
+	info("* [#2] UIO4_07 Low\n");
+
+	/* Change output low to UIO4_07 */
+	set_pin_output_low(TEST_CTRL_UIO4_07);
+
+	/*
+	 * Check all pin level (expected All Low without UIO03_01/UIO04_11)
+	 */
+	fpga_uio_407 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_07);
+	fpga_uio_411 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_11);
+	trch_uio301 = get_bit(trch_get_portd(), TRCH_UIO03_01);
+	trch_wdogout = get_bit(trch_get_porte(), TRCH_WDOG_OUT);
+	if (!(!fpga_uio_407 && fpga_uio_411 == prev_fpga_uio_411 &&
+		!trch_wdogout && trch_uio301 == prev_trch_uio301)) {
+		err("  !!! Assertion failed: UIO4_07 (Hi) to WDOG_OUT loop failed\n");
+		err("fpga_uio_407: 0x%x, fpga_uio_411 : 0x%x, prev_fpga_uio_411: 0x%x\n",
+				fpga_uio_407, fpga_uio_411, prev_fpga_uio_411);
+		err("trch_wdogout: 0x%x, trch_uio301: 0x%x, prev_trch_uio301: 0x%x\n",
+				trch_wdogout, trch_uio301, prev_trch_uio301);
+		err_count++;
+	}
+
+	/* Restore current settings */
+	init_portd();
+	init_porte();
+	sys_write32(uio407_moni, TEST_REG_ADDR(TEST_CTRL_UIO4_07));
+	sys_write32(uio411_moni, TEST_REG_ADDR(TEST_CTRL_UIO4_11));
+
+	return err_count;
 }
 
 uint32_t hardware_options_test(void)
