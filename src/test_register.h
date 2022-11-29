@@ -21,9 +21,9 @@
 
 /* Control Registers */
 // SRAM
-#define TEST_CTRL_SRAM_A19 (0x0001)
+#define TEST_CTRL_SRAM_A19 (0x0000)
 #define TEST_CTRL_SRAM_A18 (0x0004)
-#define TEST_CTRL_SRAM_A17 (0x0009)
+#define TEST_CTRL_SRAM_A17 (0x0008)
 #define TEST_CTRL_SRAM_A16 (0x000C)
 #define TEST_CTRL_SRAM_A15 (0x0010)
 #define TEST_CTRL_SRAM_A14 (0x0014)
