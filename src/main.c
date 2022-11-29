@@ -195,6 +195,7 @@ void main (void)
         enum FpgaGoal activate_fpga = FPGA_SHUTDOWN;
         int config_memory = 0;
         int boot_mode = FPGA_BOOT_48MHZ;
+        bool do_test = true;
 
         // Initialize trch-firmware
         trch_init();
@@ -214,16 +215,6 @@ void main (void)
         __delay_ms(100);
         printf("SC OBC TRCH-FW for Quality Inspection\n");
 
-        /* Tests */
-        /*  - TRCH */
-        the_error_counter += test_trch_r269();
-        /*  - I2C */
-        the_error_counter += test_temp();
-        the_error_counter += test_i2c_bridges();
-        /*  - CAN */
-        prepare_can_test();
-        the_error_counter += test_can();
-
         while (1) {
                 fpga_state = fpga_state_control(activate_fpga, config_memory, boot_mode);
                 switch(fpga_state) {
@@ -233,6 +224,20 @@ void main (void)
 
                 case FPGA_STATE_POWER_OFF:
                         puts("Off");
+                        if (do_test) {
+                                /* Tests */
+                                /*  - TRCH */
+                                the_error_counter += test_trch_r269();
+                                /*  - I2C */
+                                the_error_counter += test_temp();
+                                the_error_counter += test_i2c_bridges();
+                                /*  - CAN */
+                                prepare_can_test();
+                                the_error_counter += test_can();
+
+                                do_test = false;
+                        }
+
                         activate_fpga = hold_fpgapwr_en();
                         __delay_ms(100);
                         break;
