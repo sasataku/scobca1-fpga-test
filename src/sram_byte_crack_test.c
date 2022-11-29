@@ -35,7 +35,7 @@ uint32_t sram_byte_crack_test(uint32_t test_no)
 	write8((target_addr + 1), byte_data3);
 	write8((target_addr), byte_data4);
 
-	debug("data: 0x%08x\n", *(uint32_t*)target_addr);
+	debug("data: 0x%08x\n", target_addr);
 
 	if(*(uint32_t*)(target_addr) != word_data){
 		err("byte write access failed, data(32): %08x, data(8x4): %08x\n", 
