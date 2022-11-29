@@ -30,10 +30,10 @@ uint32_t sram_byte_crack_test(uint32_t test_no)
 	mem_addr_t target_addr = (mem_addr_t)&work_mem;
 
     /* write 32bit work area by byte access */
-	sys_write8(byte_data1, (mem_addr_t)(target_addr + 3));
-	sys_write8(byte_data2, (mem_addr_t)(target_addr + 2));
-	sys_write8(byte_data3, (mem_addr_t)(target_addr + 1));
-	sys_write8(byte_data4, (mem_addr_t)(target_addr));
+	write8(byte_data1, (mem_addr_t)(target_addr + 3));
+	write8(byte_data2, (mem_addr_t)(target_addr + 2));
+	write8(byte_data3, (mem_addr_t)(target_addr + 1));
+	write8(byte_data4, (mem_addr_t)(target_addr));
 
 	debug("data: 0x%08x\n", work_mem);
 
@@ -42,10 +42,10 @@ uint32_t sram_byte_crack_test(uint32_t test_no)
 	}
 
     /* read 32bit work area by byte access */
-	if(sys_read8((mem_addr_t)(target_addr + 3)) != byte_data1 ||
-	   sys_read8((mem_addr_t)(target_addr + 2)) != byte_data2 ||
-	   sys_read8((mem_addr_t)(target_addr + 1)) != byte_data3 ||
-	   sys_read8((mem_addr_t)(target_addr)) != byte_data4)
+	if(read8((mem_addr_t)(target_addr + 3)) != byte_data1 ||
+	   read8((mem_addr_t)(target_addr + 2)) != byte_data2 ||
+	   read8((mem_addr_t)(target_addr + 1)) != byte_data3 ||
+	   read8((mem_addr_t)(target_addr)) != byte_data4)
 	{
 			err_count++;
 	}

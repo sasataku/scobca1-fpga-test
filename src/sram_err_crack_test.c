@@ -44,7 +44,7 @@ uint32_t sram_err_crack_test(uint32_t test_no)
     mem_addr_t test_addr = TEST_START_ADDR;
     int test_count = 0;
     for(; test_count < max_test_count; test_count++){
-        sys_read16(test_addr);
+        read16(test_addr);
         if(get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM1_ERR)){
             break;
         }
@@ -63,7 +63,7 @@ uint32_t sram_err_crack_test(uint32_t test_no)
     test_addr = TEST_START_ADDR;
     test_count = 0;
     for(; test_count < max_test_count; test_count++){
-        sys_read16(test_addr + HALFWORD_OFFSET);
+        read16(test_addr + HALFWORD_OFFSET);
         if(get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM2_ERR)){
             break;
         }
