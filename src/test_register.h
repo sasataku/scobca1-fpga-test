@@ -383,4 +383,25 @@ bool test_moni_status_low(uint32_t addr, uint8_t bitpos);
 bool check_test_moni_status(uint32_t addr, uint8_t bitpos, uint32_t exp);
 uint32_t test_paired_pins_connection(struct loopback_test_regs *target);
 
+
+static inline void set_pin_input(uint32_t offset)
+{
+	sys_write32(TEST_GPIO_IN, TEST_REG_ADDR(offset));
+}
+
+static inline void set_pin_output_low(uint32_t offset)
+{
+	sys_write32(TEST_GPIO_OUT_LOW, TEST_REG_ADDR(offset));
+}
+
+static inline void set_pin_output_high(uint32_t offset)
+{
+	sys_write32(TEST_GPIO_OUT_HIGH, TEST_REG_ADDR(offset));
+}
+
+static inline uint32_t get_pin(uint32_t offset, uint8_t bit)
+{
+	return !!(sys_read32(TEST_REG_ADDR(offset)) & (1 << bit));
+}
+
 #endif /* SCOBCA1_FPGA_TEST_REGISTER_H_ */
