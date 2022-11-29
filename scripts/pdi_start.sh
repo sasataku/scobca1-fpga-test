@@ -25,6 +25,12 @@ echo "*******************************************************"
 sleep 1
 
 echo "*******************************************************"
+echo "* Send CAN Packet to kick TRCH power cycle"
+echo "*******************************************************"
+cansend can0 054#00
+sleep 5
+
+echo "*******************************************************"
 echo "* Build"
 echo "*******************************************************"
 cd ../..
@@ -34,14 +40,13 @@ west build -b scobc_module1 scobca1-fpga-test -- -DCONFIG_AUTO_RUN=y -DCONFIG_AU
 echo "*******************************************************"
 echo "* Flash"
 echo "*******************************************************"
-west flash --cmd-pre-load 'mww 0x4F000000 0x5a5a0000'
+west flash
 # First flash is failed, need to retry
-west flash --cmd-pre-load 'mww 0x4F000000 0x5a5a0000'
+west flash
 
 echo "*******************************************************"
 echo "* Wait to finish Pre Delivery Inspection"
 echo "*******************************************************"
-cd $cur
 tail -n 0 -f ./pdi.log | wait_finish_pdi
 
 echo "*******************************************************"

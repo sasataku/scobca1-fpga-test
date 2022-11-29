@@ -35,19 +35,45 @@ void start_pdi(uint32_t test_no)
 	k_sleep(K_MSEC(1000));
 
 	info("* [%d-2] Start crack test\n", test_no);
-	/* I2C Alert signal Test */
+
+	/* PUDC Test */
 /*
+	if (pudc_crack_test(no) > 0) {
+		err("* [%d] !!! Abort Pre Delivery Inspection\n", test_no);
+		goto end_of_test;
+	}
+	no++;
+*/
+
+	/* SYS_CLOCK Test */
+/*
+	if (sys_clock_crack_test(no) > 0) {
+		err("* [%d] !!! Abort Pre Delivery Inspection\n", test_no);
+		goto end_of_test;
+	}
+	no++;
+*/
+
+	/* I2C Alert signal Test */
 	if (i2c_internal_crack_test(no) > 0) {
 		err("* [%d] !!! Abort Pre Delivery Inspection\n", test_no);
 		goto end_of_test;
 	}
-*/
+	no++;
+
+	/* TRCH_CFG_MEM_MONI Test */
+	if (qspi_config_memory_trch_moni_test(no) > 0) {
+		err("* [%d] !!! Abort Pre Delivery Inspection\n", test_no);
+		goto end_of_test;
+	}
+	no++;
 
 	/* CAN crack Test */
 	if (can_crack_test(no) > 0) {
 		err("* [%d] !!! Abort Pre Delivery Inspection\n", test_no);
 		goto end_of_test;
 	}
+	no++;
 
 	info("* [%d-3] Start bridge test\n", test_no);
 
