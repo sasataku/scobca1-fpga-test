@@ -7,17 +7,17 @@
 #include "common.h"
 #include "test_register.h"
 
-uint32_t get_test_moni_status(uint32_t addr_offset, uint8_t bit_pos)
+uint32_t get_test_moni_status(mem_addr_t addr_offset, uint8_t bit_pos)
 {
 	return read32(TEST_REG_ADDR(addr_offset)) & (0x1 << bit_pos);
 }
 
-uint32_t get_test_gpio_mode(uint32_t addr_offset)
+uint32_t get_test_gpio_mode(mem_addr_t addr_offset)
 {
 	return read32(TEST_REG_ADDR(addr_offset));
 }
 
-void set_test_gpio_mode(uint32_t addr_offset, uint32_t mode)
+void set_test_gpio_mode(mem_addr_t addr_offset, uint32_t mode)
 {
 	write32(TEST_REG_ADDR(addr_offset), mode);
 }
