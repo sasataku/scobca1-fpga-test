@@ -6,40 +6,40 @@
 
 #include "common.h"
 
-uint8_t read8(mem_addr_t addr)
+uint8_t read8(uint32_t addr)
 {
 	uint8_t val = sys_read8(addr);
 	debug("     read8 [addr:0x%08X] 0x%02x\n", addr, val);
 	return val;
 }
 
-void write8(mem_addr_t addr, uint8_t val)
+void write8(uint32_t addr, uint8_t val)
 {
 	sys_write8(val, addr);
 	debug("     write8 [0x%08X] 0x%02x\n", addr, val);
 }
 
-uint16_t read16(mem_addr_t addr)
+uint16_t read16(uint32_t addr)
 {
 	uint16_t val = sys_read16(addr);
 	debug("     read16 [addr:0x%08X] 0x%04x\n", addr, val);
 	return val;
 }
 
-void write16(mem_addr_t addr, uint16_t val)
+void write16(uint32_t addr, uint16_t val)
 {
 	sys_write16(val, addr);
 	debug("     write16 [0x%08X] 0x%04x\n", addr, val);
 }
 
-uint32_t read32(mem_addr_t addr)
+uint32_t read32(uint32_t addr)
 {
 	uint32_t val = sys_read32(addr);
 	debug("     read32 [addr:0x%08X] 0x%08x\n", addr, val);
 	return val;
 }
 
-void write32(mem_addr_t addr, uint32_t val)
+void write32(uint32_t addr, uint32_t val)
 {
 	sys_write32(val, addr);
 	debug("     write32 [0x%08X] 0x%08x\n", addr, val);
