@@ -15,8 +15,8 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 {
 	/*
 	 * SRAM area for test is between 0x00100000 and 0x003fffff.
-	 * to check addr pin works, compare values between addresses
-	 * which only target pin's signal level is differ.
+	 * To check addr pin works properly, compare values between
+	 * addresses which only one (target) address pin is differ.
 	 *
 	 * In this case, while 0 to 18 pins, use addr 0x00200000 to
 	 * compare value, for 19 (highest) pin, use addr 0x00100000
@@ -43,14 +43,23 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 
 	uint32_t test_addr;
 
-	/* between 0 and 18 pins */
+	/* between 0 and 18 pins, write unique data to all addr
+	 * and then read back */
 	uint32_t compare_addr = 0x00200000;
 	write32(compare_addr, (uint32_t)compare_addr);
 
 	for(uint32_t i = 0x4; i <= 0x100000; i = i << 1){
 		test_addr = compare_addr + i;
 		write32(test_addr, test_addr);
-		if(!assert32(test_addr, read32(compare_addr), 0)){
+	}
+
+	if(!assert32(compare_addr, compare_addr, 0)){
+		err_count++;
+	}
+
+	for(uint32_t i = 0x4; i <= 0x100000; i = i << 1){
+		test_addr = compare_addr + i;
+		if(!assert32(test_addr, test_addr, 0)){
 			err_count++;
 		}
 	}
@@ -58,10 +67,14 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 	/* 19 pin */
 	compare_addr = 0x00100000;
 	write32(compare_addr, (uint32_t)compare_addr);
+
 	test_addr = 0x00300000;
 	write32(test_addr, (uint32_t)test_addr);
 
-	if(!assert32(test_addr, read32(compare_addr), 0)){
+	if(!assert32(compare_addr, compare_addr, 0)){
+		err_count++;
+	}
+	if(!assert32(test_addr, test_addr, 0)){
 		err_count++;
 	}
 
