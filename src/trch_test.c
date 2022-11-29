@@ -35,26 +35,6 @@ uint8_t set_low (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
 uint8_t set_high(uint8_t val, uint8_t bit) { return val |  (1 << bit); }
 uint8_t get_bit (uint8_t val, uint8_t bit) { return val &  (1 << bit); }
 
-void set_pin_input(uint32_t offset)
-{
-	sys_write32(TEST_GPIO_IN, TEST_REG_ADDR(offset));
-}
-
-void set_pin_output_low(uint32_t offset)
-{
-	sys_write32(TEST_GPIO_OUT_LOW, TEST_REG_ADDR(offset));
-}
-
-void set_pin_output_high(uint32_t offset)
-{
-	sys_write32(TEST_GPIO_OUT_HIGH, TEST_REG_ADDR(offset));
-}
-
-uint32_t get_pin(uint32_t offset, uint8_t bit)
-{
-	return !!(sys_read32(TEST_REG_ADDR(offset)) & (1 << bit));
-}
-
 static uint32_t test_fpga_boot0(void)
 {
 	uint8_t data;
