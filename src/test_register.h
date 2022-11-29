@@ -17,7 +17,7 @@
 #define TEST_NOT_GPIO  0x00000000
 #define TEST_GPIO_IN 0x00000001
 #define TEST_GPIO_OUT_LOW 0x00000002
-#define TEST_GPIO_OUT_HIGH 0x00000003 // Hi Impedance also using this
+#define TEST_GPIO_OUT_HIGH 0x00000003 /* Hi Impedance also using this */
 
 /* Control Registers */
 // SRAM
@@ -154,8 +154,8 @@
 
 /* Monitor Registers */
 #define TEST_MONI_SRAM        (0x0078)
-#define TEST_MONI_SRAM_ERR    (0x007C)
-#define TEST_MONI_SRAM_IO     (0x0080)
+#define TEST_MONI_SRAM_IO     (0x007C)
+#define TEST_MONI_SRAM_ERR    (0x0080)
 #define TEST_MONI_CFG_MEM     (0x0114)
 #define TEST_MONI_DATA_MEM    (0x0228)
 #define TEST_MONI_FRAM        (0x0328)
@@ -372,9 +372,12 @@ struct loopback_test_regs
 	uint8_t moni_bitpos;
 };
 
-void set_test_gpio_mode(mem_addr_t addr, uint32_t mode);
-uint32_t get_test_gpio_mode(mem_addr_t addr);
-uint32_t get_test_moni_status(mem_addr_t addr, uint8_t bitpos);
+void set_test_gpio_mode(uint32_t addr, uint32_t mode);
+uint32_t get_test_gpio_mode(uint32_t addr);
+uint32_t get_test_moni_status(uint32_t addr, uint8_t bitpos);
+bool test_moni_status_high(uint32_t addr, uint8_t bitpos);
+bool test_moni_status_low(uint32_t addr, uint8_t bitpos);
+bool check_test_moni_status(uint32_t addr, uint8_t bitpos, uint32_t exp);
 uint32_t test_paired_pins_connection(struct loopback_test_regs *target);
 
 
