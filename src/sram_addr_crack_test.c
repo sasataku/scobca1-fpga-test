@@ -51,7 +51,7 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 		test_addr = compare_addr + i;
 		write32(test_addr, test_addr);
 		if(read32(test_addr) == read32(compare_addr)){
-		    err_count++;
+			err_count++;
 		}
 	}
 
@@ -62,7 +62,7 @@ uint32_t sram_addr_crack_test(uint32_t test_no)
 	write32(test_addr, (uint32_t)test_addr);
 
 	if(read32(test_addr) == read32(compare_addr)){
-	    err_count++;
+		err_count++;
 	}
 
 	info("*** test done, error count: %d ***\n", err_count);
