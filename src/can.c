@@ -169,3 +169,58 @@ bool can_send_full(uint16_t can_id, uint32_t can_ext_id, uint8_t *can_data, uint
 
 	return true;
 }
+
+int can_send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
+{
+	uint16_t can_id = 'T';
+	uint8_t can_data[2];
+	int32_t timeout_us = 1000000;
+	uint32_t recv_id;
+	uint32_t recv_size;
+	uint16_t res;
+	uint8_t res_code;
+	uint8_t res_val;
+
+	can_data[0] = cmd;
+	can_data[1] = arg;
+
+	if (has_arg)
+		debug("*  Sending  0x%02x 0x%02x to ID 0x%02x ('%c')\n", can_data[0], can_data[1], can_id, can_id);
+	else
+		debug("*  Sending  0x%02x to ID 0x%02x ('%c')\n", can_data[0], can_id, can_id);
+
+	if (!can_send(can_id, can_data, has_arg ? 2 : 1)) {
+		assert();
+		return -1;
+	}
+
+	if (!is_can_rx_done(timeout_us)) {
+		err("  !!! Assertion failed: CAN RX DONE timed out\n");
+		assert();
+		return -1;
+	}
+
+	/* Read CAN Packet size */
+	recv_size = sys_read32(SCOBCA1_FPGA_CAN_RMR2);
+	if (recv_size > 2) {
+		err("  !!! Assertion failed: Invalid CAN Packet size %u, expecting <= 2\n", recv_size);
+		assert();
+		return -1;
+	}
+
+	/* Read CAN ID */
+	recv_id = (sys_read32(SCOBCA1_FPGA_CAN_RMR1) & CAN_TXID1_BIT_MASK) >> CAN_TXID1_BIT_SHIFT;
+	if (recv_id != 'F') {
+		err("  !!! Assertion failed: Unexpected CAN ID %u, expecting 0x46", recv_id);
+		assert();
+		return -1;
+	}
+
+	/* Read CAN Packet data */
+	res = sys_read32(SCOBCA1_FPGA_CAN_RMR3) >> 16;
+	res_code = res >> 8;
+	res_val = res & 0xff;
+	debug("*  Received 0x%02x 0x%02x from FPGA 0x%02x\n", res_code, res_val, recv_id);
+
+	return (int)res_val;
+}

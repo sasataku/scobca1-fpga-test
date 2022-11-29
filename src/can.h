@@ -111,3 +111,4 @@ static inline bool can_send(uint16_t can_id, uint8_t *can_data, uint8_t size)
 {
 	return can_send_full(can_id, 0, can_data, size, false);
 }
+int can_send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg);
