@@ -29,12 +29,6 @@
 
 #define FPGA_RESERVE        (7)
 
-uint8_t set_out (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
-uint8_t set_in  (uint8_t val, uint8_t bit) { return val |  (1 << bit); }
-uint8_t set_low (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
-uint8_t set_high(uint8_t val, uint8_t bit) { return val |  (1 << bit); }
-uint8_t get_bit (uint8_t val, uint8_t bit) { return val &  (1 << bit); }
-
 static uint32_t test_fpga_boot0(void)
 {
 	uint8_t data;

@@ -4,11 +4,11 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-
 #include <stdint.h>
 
 #include "common.h"
 #include "can.h"
+#include "trch.h"
 #include "test_register.h"
 
 /*
@@ -162,9 +162,93 @@ uint32_t uio4_08__i2c_fpga_ext_scl_tests(void)
  * And, the following pins have pull-down
  *  - SPICAN_MISO
  */
+
+/* RC6 */
+#define TRCH_UART_TX (6)
+/* RD3 */
+#define TRCH_I2C_EXT_SDA (3)
+
 uint32_t uio4_09__i2c_fpga_ext_sda_tests(void)
 {
-	return 0;
+	uint32_t err_count = 0;
+	uint8_t portc, portd;
+	uint8_t trisc, trisd;
+	uint32_t uio409_moni, i2csda_moni;
+	uint32_t prev_trch_uart_tx, trch_uart_tx;
+	uint32_t trch_i2c_sda;
+	uint32_t fpga_uio_409;
+	uint32_t fpga_i2c_sda;
+
+	info("* Start of UIO4_09 to I2C_FPGA_EXT_SDA loop test\n");
+
+	/* Save current settings */
+	portc = trch_get_portc();
+	trisc = trch_get_trisc();
+	portd = trch_get_portd();
+	trisd = trch_get_trisd();
+	uio409_moni = sys_read32(TEST_REG_ADDR(TEST_CTRL_UIO4_09));
+	i2csda_moni = sys_read32(TEST_REG_ADDR(TEST_CTRL_I2C_EXT_SDA));
+
+	/* TTRCH_UART_TX is not connected to any pins, so set the input
+	 * and save the status */
+	trch_set_trisc(set_in(trisc, TRCH_UART_TX));
+	prev_trch_uart_tx = get_bit(trch_get_portc(), TRCH_UART_TX);
+
+	info("* [#1] UIO4_09 Hi\n");
+	/* Change to input all pin expected UIO4_09 */
+	set_pin_input(TEST_CTRL_I2C_EXT_SDA);
+	trch_set_trisd(set_in(trisd, TRCH_I2C_EXT_SDA));
+
+	/* Change output hi to UIO4_09 */
+	set_pin_output_high(TEST_CTRL_UIO4_09);
+
+	/*
+	 * Check all pin level (expected All Hi without UART TX)
+	 */
+	fpga_uio_409 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_09);
+	fpga_i2c_sda = get_pin(TEST_MONI_I2C_EXT, MONI_BIT_I2C_EXT_SDA);
+	trch_uart_tx = get_bit(trch_get_portc(), TRCH_UART_TX);
+	printk("uart tris 0x%x\n", trch_get_trisc());
+	trch_i2c_sda = get_bit(trch_get_portd(), TRCH_I2C_EXT_SDA);
+	printk("sda tris 0x%x\n", trch_get_trisd());
+	if (!(fpga_uio_409 && fpga_i2c_sda &&
+		trch_uart_tx == prev_trch_uart_tx && trch_i2c_sda)) {
+		err("  !!! Assertion failed: UIO4_09 (Hi) to I2C_FPGA_EXT_SDA loop failed\n");
+		err("fpga_uio_409: %x, fpga_i2c_sda: %x, trch_uart_tx: %d\n", fpga_uio_409, fpga_i2c_sda, trch_uart_tx);
+		err("prev_trch_uart_tx: %x, trch_i2c_sda: %x\n", prev_trch_uart_tx, trch_i2c_sda);
+		err_count++;
+	}
+	goto end_of_test;
+
+	info("* [#2] UIO4_09 Low\n");
+	/* Change output hi to UIO4_09 */
+	set_pin_output_low(TEST_CTRL_UIO4_09);
+
+	/*
+	 * Check all pin level
+	 */
+	fpga_uio_409 = get_pin(TEST_MONI_USER_IO4, MONI_BIT_UIO4_09);
+	fpga_i2c_sda = get_pin(TEST_MONI_I2C_EXT, MONI_BIT_I2C_EXT_SDA);
+	trch_uart_tx = get_bit(trch_get_portc(), TRCH_UART_TX);
+	trch_i2c_sda = get_bit(trch_get_portd(), TRCH_I2C_EXT_SDA);
+	if (!(!fpga_uio_409 && !fpga_i2c_sda &&
+		trch_uart_tx == prev_trch_uart_tx && !trch_i2c_sda)) {
+		err("  !!! Assertion failed: UIO4_09 (Low) to I2C_FPGA_EXT_SDA loop failed\n");
+		err("fpga_uio_409: %x, fpga_i2c_sda: %x, trch_uart_tx: %d\n", fpga_uio_409, fpga_i2c_sda, trch_uart_tx);
+		err("prev_trch_uart_tx: %x, trch_i2c_sda: %x\n", prev_trch_uart_tx, trch_i2c_sda);
+		err_count++;
+	}
+
+	/* Restore current settings */
+	trch_set_portc(portc);
+	trch_set_trisc(trisc);
+	trch_set_portd(portd);
+	trch_set_trisd(trisd);
+	sys_write32(uio409_moni, TEST_REG_ADDR(TEST_MONI_USER_IO4));
+	sys_write32(i2csda_moni, TEST_REG_ADDR(TEST_MONI_I2C_EXT));
+
+end_of_test:
+	return err_count;
 }
 
 uint32_t hardware_options_test(void)

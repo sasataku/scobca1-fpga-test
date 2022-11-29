@@ -6,6 +6,12 @@
 
 #pragma once
 
+static inline uint8_t set_out (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
+static inline uint8_t set_in  (uint8_t val, uint8_t bit) { return val |  (1 << bit); }
+static inline uint8_t set_low (uint8_t val, uint8_t bit) { return val & ~(1 << bit); }
+static inline uint8_t set_high(uint8_t val, uint8_t bit) { return val |  (1 << bit); }
+static inline uint8_t get_bit (uint8_t val, uint8_t bit) { return val &  (1 << bit); }
+
 static inline uint8_t trch_get_porta(void) { return can_send_cmd_to_trch('a', 0, false); }
 static inline uint8_t trch_get_portb(void) { return can_send_cmd_to_trch('b', 0, false); }
 static inline uint8_t trch_get_portc(void) { return can_send_cmd_to_trch('c', 0, false); }
