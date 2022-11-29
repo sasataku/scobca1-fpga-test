@@ -68,20 +68,33 @@ uint8_t test_temp(void)
  * I2C pins have pull-ups and are used as open-drains.  You shouldn't
  * drive HIGH.
  *
- * Test a target pin by drive adjacent pins LOW, make the pin HiZ by
+ * Test a target pin by driving adjacent pins LOW, make the pin HiZ by
  * settting dir IN, and read it.  If the pin is read HIGH, it's good.
  * Otherwise, has a bridge.
+ *
+ * Hardware Options
+ *
+ * I2C_EXT_SCL is connected to either UIO4_08 or UIO3_02.  In case of
+ * UIO4_09, it is connected to the FPGA. Because the FPGA is not
+ * powered on yet, the pin is HiZ. Thus it does not affect this test.
+ * UIO3_02 is, on the other hand, connected to PIC and it's OUT LOW by
+ * default. Thus we make it HiZ for this test.
+ *
+ * I2C_EXT_SDA is connected to either UIO4_09 or TRCH_UART_TX. UIO4_09
+ * is, again, connected to FPGA and it's HiZ.  Make TRCH_UART_TX INPUT
+ * so that we can read RD3 safely without TRCH_UART_TX interfering it.
  */
 uint8_t test_i2c_bridges()
 {
         uint8_t ret = 0;
+        uint8_t rd3;
 
         /* Disable SPI */
         SPICAN_CS_B = PORT_DATA_HIGH;
         SPICAN_CS_B_DIR = PORT_DIR_OUT;
 
         /* TEST */
-        /* 38 RD0 */
+        /* 38 RD0 I2C_INT_SCL */
         PORTCbits.RC3 = PORT_DATA_LOW;
         TRISCbits.TRISC3 = PORT_DIR_OUT;
         PORTDbits.RD1 = PORT_DATA_LOW;
@@ -90,7 +103,7 @@ uint8_t test_i2c_bridges()
         TRISDbits.TRISD0 = PORT_DIR_IN;
         ret += expect("RD0", PORT_DATA_HIGH, PORTDbits.RD0);
 
-        /* 39 RD1 */
+        /* 39 RD1 I2C_INT_SDL */
         PORTDbits.RD0 = PORT_DATA_LOW;
         TRISDbits.TRISD0 = PORT_DIR_OUT;
         PORTDbits.RD2 = PORT_DATA_LOW;
@@ -99,23 +112,28 @@ uint8_t test_i2c_bridges()
         TRISDbits.TRISD1 = PORT_DIR_IN;
         ret += expect("RD1", PORT_DATA_HIGH, PORTDbits.RD1);
 
-        /* 40 RD2 */
+        /* 40 RD2 I2C_EXT_SCL */
         PORTDbits.RD1 = PORT_DATA_LOW;
         TRISDbits.TRISD1 = PORT_DIR_OUT;
         PORTDbits.RD3 = PORT_DATA_LOW;
         TRISDbits.TRISD3 = PORT_DIR_OUT;
 
         TRISDbits.TRISD2 = PORT_DIR_IN;
+        TRISDbits.TRISD6 = PORT_DIR_IN; /* Disable PORT D6: UIO3_02  */
         ret += expect("RD2", PORT_DATA_HIGH, PORTDbits.RD2);
 
-        /* 41 RD3 */
+        /* 41 RD3 I2C_EXT_SDA */
         PORTDbits.RD2 = PORT_DATA_LOW;
         TRISDbits.TRISD2 = PORT_DIR_OUT;
         PORTCbits.RC4 = PORT_DATA_LOW;
         TRISCbits.TRISC4 = PORT_DIR_OUT;
 
         TRISDbits.TRISD3 = PORT_DIR_IN;
-        ret += expect("RD3", PORT_DATA_HIGH, PORTDbits.RD3);
+        TRISCbits.TRISC6 = PORT_DIR_IN; /* Disable PORT C6: TRCH_UART_TX */
+        rd3 = PORTDbits.RD3;
+        TRISCbits.TRISC5 = PORT_DIR_OUT;  /* Re-enable PORT C6: TRCH_UART_TX */
+
+        ret += expect("RD3", PORT_DATA_HIGH, rd3);
 
         /* Recover I2C and enable SPI */
 
