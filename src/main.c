@@ -36,6 +36,7 @@
 
 enum ScTestNo {
 	SC_TEST_PDI = 1,
+	SC_TEST_CRACK_USER_IO_FOR_PDI = 2,
 	SC_TEST_QSPI_INIT,
 	SC_TEST_LONG_RUN,
 	SC_TEST_HRMEM,
@@ -70,6 +71,8 @@ bool is_exit;
 
 void print_menu(void)
 {
+	info("[%d] Pre Delivery Inspection\n", SC_TEST_PDI);
+	info("[%d] User IO crack Test (For PDI)\n", SC_TEST_CRACK_USER_IO_FOR_PDI);
 	info("[%d] QSPI Initialize\n", SC_TEST_QSPI_INIT);
 	info("[%d] Long Run Test\n", SC_TEST_LONG_RUN);
 	info("[%d] HRMEM Test\n", SC_TEST_HRMEM);
@@ -101,7 +104,6 @@ void print_menu(void)
 	info("[%d] Internal I2C crack Test\n", SC_TEST_CRACK_I2C_INTERNAL);
 	info("[%d] Config Memory TRCH_CFG_MEM_MONI Test\n", SC_TEST_TRCH_CFG_MEM_MONI);
 	info("[%d] Hardware Option Pin Test\n", SC_TEST_HARDWARE_OPTIONS);
-	info("[%d] Pre Delivery Inspection\n", SC_TEST_PDI);
 }
 
 static void print_ids(void)
@@ -155,6 +157,16 @@ void main(void)
 		}
 
 		switch (test_no) {
+		case SC_TEST_PDI:
+			start_pdi(test_no);
+			print_ids();
+			/* Exit after Pre Delivery Inspection */
+			return;
+		case SC_TEST_CRACK_USER_IO_FOR_PDI:
+			user_io_crack_test(test_no);
+			print_ids();
+			/* Exit after User IO test in Pre Delivery Inspection */
+			return;
 		case SC_TEST_QSPI_INIT:
 			qspi_init(test_no);
 			break;
@@ -239,11 +251,6 @@ void main(void)
 		case SC_TEST_HARDWARE_OPTIONS:
 			hardware_options_test();
 			break;
-		case SC_TEST_PDI:
-			start_pdi(test_no);
-			print_ids();
-			/* Exit after Pre Delivery Inspection */
-			return;
 		default:
 			break;
 		}
