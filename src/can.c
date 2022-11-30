@@ -174,7 +174,7 @@ int can_send_cmd_to_trch(uint8_t cmd, uint8_t arg, bool has_arg)
 {
 	uint16_t can_id = 'T';
 	uint8_t can_data[2];
-	int32_t timeout_us = 1000000;
+	int32_t timeout_us = 500000;
 	uint32_t recv_id;
 	uint32_t recv_size;
 	uint16_t res;
