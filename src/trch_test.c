@@ -250,6 +250,19 @@ static uint32_t short_circuit_tests(void)
 	return err_count;
 }
 
+static uint32_t get_trch_self_test_result(void)
+{
+	uint32_t err_count = 0;
+
+	/* Get TRCH Self test result before doing FPGA boot */
+	err_count = can_send_cmd_to_trch(0x05, 0, false);
+	if (err_count < 0 ) {
+		err_count++;
+	}
+
+	return err_count;
+}
+
 uint32_t trch_test(void)
 {
 	uint32_t err_count = 0;
@@ -262,6 +275,7 @@ uint32_t trch_test(void)
 
 	err_count += open_circuit_tests();
 	err_count += short_circuit_tests();
+	err_count += get_trch_self_test_result();
 
 	if (!can_terminate(false)) {
 		assert();
