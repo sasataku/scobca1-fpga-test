@@ -1,12 +1,5 @@
 #!/bin/sh
 
-sudo ip addr | grep can0 | grep UP > /dev/null
-if [ $? = 1 ]; then
-	echo "CAN baudrate set to 1Mbps and link up can0"
-	sudo ip link set can0 type can bitrate 1000000
-	sudo ip link set can0 up
-fi
-
 while true
 do
 	# CAN ID

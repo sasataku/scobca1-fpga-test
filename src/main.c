@@ -35,7 +35,8 @@
 #include "pdi.h"
 
 enum ScTestNo {
-	SC_TEST_QSPI_INIT = 1,
+	SC_TEST_PDI = 1,
+	SC_TEST_QSPI_INIT,
 	SC_TEST_LONG_RUN,
 	SC_TEST_HRMEM,
 	SC_TEST_QSPI_CFG_MEM,
@@ -63,7 +64,6 @@ enum ScTestNo {
 	SC_TEST_CRACK_I2C_INTERNAL,
 	SC_TEST_TRCH_CFG_MEM_MONI,
 	SC_TEST_HARDWARE_OPTIONS,
-	SC_TEST_PDI = 99,
 };
 
 bool is_exit;
