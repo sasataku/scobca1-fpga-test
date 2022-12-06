@@ -15,8 +15,8 @@
 #define ECCERRCNTCLRR_REG (HRMEM_REG_BASE + ECCERRCNTCLRR_OFFSET)
 
 /* set SRAM address where never access before */
-#define TEST_START_ADDR 0x603F0000
-#define TEST_SKIP_ADDR 0x10
+#define TEST_START_ADDR 0x60320000
+#define TEST_SKIP_ADDR 0x4
 #define HALFWORD_OFFSET 0x2
 
 uint32_t sram_err_crack_test(uint32_t test_no)
@@ -31,7 +31,7 @@ uint32_t sram_err_crack_test(uint32_t test_no)
 
     info("*** SRAM ECC err crack test starts ***\n");
     uint32_t err_count = 0;
-    const uint32_t max_test_count = 5;
+    const uint32_t max_test_count = 100;
 
     // SRAM 1 Test
     write32(TEST_MONI_SRAM_ERR, 0x0);
@@ -50,12 +50,16 @@ uint32_t sram_err_crack_test(uint32_t test_no)
         }
         test_addr += TEST_SKIP_ADDR;
     }
+
     if(test_count == max_test_count){
 		err("SRAM1 error couldn't be detected, moni addr: 0x%08X, val: %08x\n",
 			TEST_REG_ADDR(TEST_MONI_SRAM_ERR),
         	get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM1_ERR)
 			);
 	   	err_count++;
+	}
+	else{
+		info("SRAM1 crack test, tested addr count : %d\n", test_count);
 	}
 
     // SRAM 2 Test
@@ -75,12 +79,16 @@ uint32_t sram_err_crack_test(uint32_t test_no)
         }
         test_addr += TEST_SKIP_ADDR;
     }
+
     if(test_count == max_test_count){
 		err("SRAM2 error couldn't be detected, moni addr: 0x%08X, val: %08x\n",
 			TEST_REG_ADDR(TEST_MONI_SRAM_ERR),
         	get_test_moni_status(TEST_MONI_SRAM_ERR, MONI_BIT_SRAM1_ERR)
 		   );
 	   	err_count++;
+	}
+	else{
+		info("SRAM2 crack test, tested addr count : %d\n", test_count);
 	}
 
     info("*** test done, error count: %u ***\n", err_count);
