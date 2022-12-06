@@ -7,6 +7,8 @@
 #include "common.h"
 #include "sram_byte_crack_test.h"
 
+#define TEST_SRAM_ADDR 0x60310000
+
 uint32_t sram_byte_crack_test(uint32_t test_no)
 {
 	/*
@@ -26,8 +28,7 @@ uint32_t sram_byte_crack_test(uint32_t test_no)
 	const uint32_t word_data =
 		   	(byte_data1 << 24) + (byte_data2 << 16) + (byte_data3 << 8) + byte_data4;
 
-	uint32_t work_mem = 0;
-	uint32_t target_addr = (uint32_t)&work_mem;
+	uint32_t target_addr = (uint32_t)TEST_SRAM_ADDR;
 
     /* write 32bit work area by byte access */
 	write8((target_addr + 3), byte_data1);
